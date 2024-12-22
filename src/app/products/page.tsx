@@ -11,30 +11,61 @@ import { clientLinks, httpClient } from "@/utils";
 import { useAppDispatch, useAppSelector } from "@/hooks/hook";
 import { setCategory, setFilteredProducts, setProducts } from "@/slices/product/product";
 import { all } from "axios";
+import { object } from "yup";
+import { setCategories } from "@/slices/category/category";
+
+// Định nghĩa kiểu dữ liệu cho sản phẩm
+interface Product {
+  id: number;              // ID sản phẩm
+  name: string;            // Tên sản phẩm
+  description: string,
+  price: number,
+  stock: number,
+  image: string,
+  categoryName: string;    // Tên danh mục
+  // Thêm các thuộc tính khác nếu cần
+}
 
 // This function will run on the server
 export default function ProductPage() {
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
+
+  const fetchAdminProduct = async () => {
+    try {
+      // Gọi API để lấy dữ liệu admin
+      const response = await httpClient.get({
+        url: clientLinks.homepage.product,
+      });
+
+      const productData = response.data;
+
+      // // Cập nhật state với dữ liệu trả về
+      dispatch(setProducts(productData.data))
+      dispatch(setFilteredProducts(productData.data))
+      dispatch(setCategory("all"))
+    } catch (err) {
+      console.error('Error fetching admin data:', err);
+    } finally {
+    }
+  };
+  const fetchAdminCategory = async () => {
+    try {
+      const response = await httpClient.get({
+        url: clientLinks.homepage.category,  // Endpoint lấy dữ liệu category
+      });
+
+      const categoryData = response.data;
+      console.log("categoryData: ", categoryData.data)
+      // Dispatch action vào Redux để cập nhật dữ liệu category
+      dispatch(setCategories(categoryData.data));  // Giả sử bạn lưu category vào state
+    } catch (err) {
+      console.error('Error fetching category data:', err);
+    }
+  };
+
   useEffect(() => {
-    const fetchAdminData = async () => {
-      try {
-        // Gọi API để lấy dữ liệu admin
-        const response = await httpClient.get({
-          url: clientLinks.homepage.product,
-        });
-
-        const productData = response.data
-        // Cập nhật state với dữ liệu trả về
-        dispatch(setProducts(productData))
-        dispatch(setFilteredProducts(productData))
-        dispatch(setCategory("all"))
-      } catch (err) {
-        console.error('Error fetching admin data:', err);
-      } finally {
-      }
-    };
-
-    fetchAdminData(); // Gọi hàm fetchAdminData khi component mount
+    fetchAdminProduct(); // Gọi hàm fetchAdminData khi component mount
+    fetchAdminCategory();
   }, []); // [] đảm bảo useEffect chỉ chạy một lần khi component mount
 
   // Fetch data from API

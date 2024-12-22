@@ -1,96 +1,74 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { int } from "aws-sdk/clients/datapipeline";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-// Định nghĩa kiểu dữ liệu cho sản phẩm
-interface Product {
-    id: number;              // ID sản phẩm
-    name: string;            // Tên sản phẩm
-    description: string,
-    price: number,
-    stock: number,
-    image: string,
-    categoryName: string;    // Tên danh mục
-    // Thêm các thuộc tính khác nếu cần
-}
-interface filterdAction {
-    Products: Product[],
-    filteredCategory: string,
-
+// Định nghĩa kiểu dữ liệu cho mỗi category
+interface Category {
+    id: string;   // ID của category (UUID hoặc string)
+    name: string; // Tên của category
 }
 
-interface ProductsState {
-    products: Product[];         // Danh sách sản phẩm gốc
-    filteredProducts: Product[]; // Danh sách sản phẩm đã lọc
-    filteredCategory: string,
-    message: string;             // Thông báo
+// Định nghĩa state cho category
+interface CategoryState {
+    categories: Category[];  // Mảng lưu trữ các category
+    loading: boolean;        // Trạng thái loading
+    error: string | null;    // Thông báo lỗi
 }
 
-const initialState: ProductsState = {
-    products: [],
-    filteredProducts: [],
-    filteredCategory: "",
-    message: ""
+// State ban đầu
+const initialState: CategoryState = {
+    categories: [],
+    loading: false,
+    error: null,
 };
 
-const productsSlice = createSlice({
-    name: "products",
-    initialState,
+// Tạo slice cho category
+const categorySlice = createSlice({
+    name: 'category',  // Tên slice
+    initialState,      // State ban đầu
     reducers: {
-        setProducts(state, action: PayloadAction<Product[]>) {
-            state.products = action.payload;
-            state.filteredProducts = action.payload; // Cập nhật cả sản phẩm gốc và sản phẩm đã lọc
-        },
-        setFilteredProducts(state, action: PayloadAction<filterdAction>) {
-            state.filteredCategory = action.payload.filteredCategory
-            state.filteredProducts = action.payload.Products; // Cập nhật sản phẩm đã lọc
-        },
-        setMessage(state, action: PayloadAction<string>) {
-            state.message = action.payload; // Cập nhật thông báo
+        // Thêm category mới
+        addCategory(state, action: PayloadAction<Category>) {
+            state.categories.push(action.payload);
         },
 
-        createProduct(state, action: PayloadAction<Product>) {
-            state.products.push(action.payload);
-            if (action.payload.categoryName == state.filteredCategory)
-                state.filteredProducts.push(action.payload); // Đồng bộ danh sách lọc
-            state.message = "Product created successfully!";
-        },
-
-        // 3. Cập nhật sản phẩm theo ID
-        updateProductById(state, action: PayloadAction<Product>) {
-            const updatedProduct = action.payload;
-            const index = state.products.findIndex(product => product.id === updatedProduct.id);
-
-            if (index !== -1) {
-                // Cập nhật sản phẩm trong danh sách gốc
-                state.products[index] = { ...state.products[index], ...updatedProduct };
-
-                if (action.payload.categoryName == state.filteredCategory) {
-
-                    const filteredIndex = state.filteredProducts.findIndex(product => product.id === updatedProduct.id);
-                    if (filteredIndex !== -1) {
-                        state.filteredProducts[filteredIndex] = { ...state.filteredProducts[filteredIndex], ...updatedProduct };
-                    }
-                }
-                state.message = "Product updated successfully!";
-            } else {
-                state.message = "Product not found!";
+        // Cập nhật tên category dựa trên id
+        updateCategoryName(state, action: PayloadAction<{ id: string, name: string }>) {
+            const { id, name } = action.payload;
+            const category = state.categories.find(c => c.id === id);
+            if (category) {
+                category.name = name;
             }
         },
 
-        // 4. Xóa sản phẩm theo ID
-        deleteProductById(state, action: PayloadAction<number>) {
-            const id = action.payload;
+        // Xóa category theo id
+        deleteCategory(state, action: PayloadAction<string>) {
+            state.categories = state.categories.filter(category => category.id !== action.payload);
+        },
 
-            // Xóa sản phẩm trong danh sách gốc
-            state.products = state.products.filter(product => product.id !== id);
+        // Set trạng thái loading
+        setLoading(state, action: PayloadAction<boolean>) {
+            state.loading = action.payload;
+        },
 
-            // Đồng bộ danh sách lọc
-            state.filteredProducts = state.filteredProducts.filter(product => product.id !== id);
-
-            state.message = `Product with ID ${id} deleted successfully!`;
-        }
+        // Set lỗi
+        setError(state, action: PayloadAction<string | null>) {
+            state.error = action.payload;
+        },
+        // Cập nhật tất cả categories (ví dụ từ API)
+        setCategories(state, action: PayloadAction<Category[]>) {
+            state.categories = action.payload;
+        },
     },
 });
 
-export const { setProducts, setFilteredProducts, setMessage, updateProductById } = productsSlice.actions;
-export default productsSlice.reducer;
+// Export actions từ slice
+export const {
+    addCategory,
+    updateCategoryName,
+    deleteCategory,
+    setLoading,
+    setError,
+    setCategories,
+} = categorySlice.actions;
+
+// Export reducer để sử dụng trong store
+export default categorySlice.reducer;

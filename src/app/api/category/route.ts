@@ -6,11 +6,10 @@ export const GET = async () => {
     try {
         // Thay đổi đường dẫn API từ apiLinks.user.region thành apiLinks.homepage.product
         const response = await httpClient.get({
-            url: apiLinks.homepage.product,  // Cập nhật ở đây
+            url: apiLinks.homepage.Category,  // Cập nhật ở đây
         });
 
         const data = response.data;
-        console.log("apiLinks.homepage.product: ", data);
 
         return NextResponse.json({ data }, { status: 200 });
     } catch (error) {

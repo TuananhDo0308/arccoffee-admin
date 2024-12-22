@@ -29,7 +29,13 @@ const nextConfig = {
     return config;
   },
   images: {
-    domains: ['7903-2402-800-63a6-e30b-8182-1957-7895-a241.ngrok-free.app'], // Thay thế bằng domain ngrok của bạn
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**', // Allows all paths under res.cloudinary.com
+      },
+    ],
   },
   // ...other config
 };

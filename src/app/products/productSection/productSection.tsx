@@ -12,19 +12,34 @@ import DetailProduct from "./detailProduct";
 import { updateProduct } from "@/API/productAPI";
 import ConfirmDialog from "@/components/ConfirmBox";
 import { useAppSelector } from "@/hooks/hook";
+import { httpClient, clientLinks } from "@/utils";
+import { CompressSharp } from "@mui/icons-material";
 
 const ProductTable = ({
   suppliers,
 }: {
   suppliers: any[];
 }) => {
-  const {products, filteredProducts} = useAppSelector(state => state.product);
+  const { products, filteredProducts } = useAppSelector(state => state.product);
+  const categories = useAppSelector(state => (state.category.categories));
+  console.log("categories: ", categories)
+  // const products = useAppSelector(state => state.product.products);
+  // const filteredProducts = useAppSelector(state => state.product.filteredProducts);
+  // const productArray = Object.values(filteredProducts);
+  // productArray.map((products, index) => (
+  //   console.log(`productArray: ${index}`, products)
+  // ))
+
+  // console.log("products: ", products)
+  // console.log("filteredProducts: ", filteredProducts)
+  // console.log("Array.isArray(filteredProducts): ", Array.isArray(filteredProducts))
+
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [showActions, setShowActions] = useState<number | null>(null); // Tracks which row's action menu is open
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  
+
 
   const handleOpenDetail = (product: any) => {
     setSelectedProduct(product);
@@ -40,7 +55,7 @@ const ProductTable = ({
 
   const handleDelete = async (index: number, productId: string) => {
     setEditingIndex(null);
-        setShowActions(null);
+    setShowActions(null);
 
     try {
       await deleteProduct({ productId });
@@ -90,31 +105,33 @@ const ProductTable = ({
           className="mx-3 w-[500px] rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
         />
         <div>
-          {/* <select
+          <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className=" mr-4 rounded-lg border-[1.5px] border-primary bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white"
           >
-            <option value="all">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.str_malh} value={category.str_malh}>
-                {category.str_tenlh}
-              </option>
-            ))}
-          </select> */}
+            <option value="all">All Status</option>
+            <option key='available' value='available'>
+              Available
+            </option>
+            <option key='hidden' value='hidden'>
+              Hidden
+            </option>
+          </select>
 
-          {/* <select
+          <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className=" mr-4 rounded-lg border-[1.5px] border-primary bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white"
           >
             <option value="all">All Categories</option>
             {categories.map((category) => (
-              <option key={category.str_malh} value={category.str_malh}>
-                {category.str_tenlh}
+              <option key={category.id} value={category.id}>
+                {category.name}
               </option>
             ))}
-          </select> */}
+          </select>
+          
         </div>
       </div>
       <div className="grid grid-cols-7 border-t border-stroke px-4 py-4.5 dark:border-strokedark sm:grid-cols-9 md:px-6 2xl:px-7.5">
@@ -125,7 +142,7 @@ const ProductTable = ({
           <p className="font-medium">Category</p>
         </div>
         <div className="col-span-2 hidden items-center sm:flex">
-          <p className="font-medium">Supplier</p>
+          <p className="font-medium">Description</p>
         </div>
         <div className="col-span-1 flex items-center">
           <p className="font-medium">Price</p>
@@ -137,7 +154,6 @@ const ProductTable = ({
           <p className="font-medium">Actions</p>
         </div>
       </div>
-      
 
       {filteredProducts.map((product, index) => (
         <div
@@ -148,7 +164,7 @@ const ProductTable = ({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="h-12.5 w-15 rounded-md">
                 <Image
-                  src={`${IMG_URL}/${product.}`}
+                  src={product.image}
                   width={400}
                   height={600}
                   objectFit="cover"
@@ -163,12 +179,12 @@ const ProductTable = ({
 
           <div className="col-span-2 hidden items-center sm:flex">
             <p className="text-sm text-black dark:text-white">
-              {getCategoryName(product.categoryName)}
+              {product.categoryName}
             </p>
           </div>
           <div className="col-span-2 hidden items-center sm:flex">
             <p className="text-sm text-black dark:text-white">
-              {getSupplierName(product.categoryName)}
+              {product.description}
             </p>
           </div>
 
@@ -203,12 +219,12 @@ const ProductTable = ({
                 >
                   <EditIcon />
                 </IconButton>
-                <IconButton
+                {/* <IconButton
                   aria-label="delete"
                   onClick={() => handleDelete(index, product.id)}
                 >
                   <DeleteIcon />
-                </IconButton>
+                </IconButton> */}
               </div>
             )}
             {/* {selectedProduct && (

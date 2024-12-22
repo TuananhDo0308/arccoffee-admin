@@ -15,7 +15,8 @@ const apiLinks = {
   admin: {
     signin: `${authUrl}/api/authentication/login`,
     updateAdmin: `${authUrl}/api/arc-shop/profile/`,
-    getAdmin: `${authUrl}/api/arc-shop/profile`
+    getAdmin: `${authUrl}/api/arc-shop/profile`,
+    region: `${authUrl}/api/regions`,
   }
 };
 

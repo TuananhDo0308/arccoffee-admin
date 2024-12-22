@@ -44,9 +44,9 @@ const productsSlice = createSlice({
         setCategory(state, action: PayloadAction<string>) {
             state.filteredCategory = action.payload;
         },
-        setFilteredProducts(state, action: PayloadAction<filterdAction>) {
-            state.filteredCategory = action.payload.filteredCategory
-            state.filteredProducts = action.payload.Products; // Cập nhật sản phẩm đã lọc
+        setFilteredProducts(state, action: PayloadAction<Product[]>) {
+            // state.filteredCategory = action.payload.filteredCategory;
+            state.filteredProducts = action.payload; // Cập nhật sản phẩm đã lọc
         },
         setMessage(state, action: PayloadAction<string>) {
             state.message = action.payload; // Cập nhật thông báo

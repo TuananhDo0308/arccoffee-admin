@@ -10,6 +10,7 @@ import signupReducer from '../slices/UIcomponentSlice/SignupPopUpSlice'
 import { sign } from 'crypto';
 import auth from '@/slices/authSlice'
 import products from '@/slices/product/product'
+import category from '@/slices/category/category'
 const persistConfig = {
   key: 'root',
   storage,
@@ -20,7 +21,8 @@ const rootReducer = combineReducers({
   signin:signinReducer,
   auth: auth,
   signup:signupReducer,
-  product: products
+  product: products,
+  category: category,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
