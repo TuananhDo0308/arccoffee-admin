@@ -1,6 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SidebarToggleProps {
   sidebarOpen: boolean;
@@ -9,14 +8,14 @@ interface SidebarToggleProps {
 
 const SidebarToggle: React.FC<SidebarToggleProps> = ({ sidebarOpen, setSidebarOpen }) => {
   return (
-    <motion.button
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
+    <button
       onClick={() => setSidebarOpen(!sidebarOpen)}
-      className="fixed left-0 top-1/2 z-[1000] -translate-y-1/2 rounded-r-md bg-primary p-2 text-white shadow-md"
+      className={`fixed ${
+        sidebarOpen ? 'left-[185px]' : 'left-[50px]'
+      } top-4 z-[1000] rounded-full bg-white p-1.5 text-gray-500 shadow-md hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-all duration-300`}
     >
-      <ChevronRight size={24} className={`transform transition-transform duration-300 ${sidebarOpen ? "rotate-180" : ""}`} />
-    </motion.button>
+      {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+    </button>
   );
 };
 

@@ -1,4 +1,3 @@
-import { getProducts } from "@/API/productAPI";
 
 const clientUrl = 'http://localhost:3000';
 

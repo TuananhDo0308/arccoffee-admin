@@ -5,12 +5,15 @@ import { Card, CardBody, CardHeader, Button } from "@nextui-org/react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import ProcessingOrderTable from "./ProcessingOrder/Process";
 import CompletedOrderTable from "./CompletedOrder/completedOrder";
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 const OrderPage = () => {
   const [activeSection, setActiveSection] = useState<string>("process");
 
   return (
     <DefaultLayout>
+              <Breadcrumb pageName="Orders" />
+
       <Card className="h-full w-full">
         <CardHeader className="flex flex-col items-start px-6 py-5">
           <div className="mb-4 flex w-full flex-col gap-1">

@@ -278,12 +278,10 @@ const Settings = () => {
     <DefaultLayout>
       <div className="mx-auto max-w-270">
         <Breadcrumb pageName="Settings" />
-        <div className="modal">
-          {/* Modal Content */}
-          <div className="modal-content">
-            <div className="flex justify-between flex-wrap">
+
+            <div className="flex justify-between gap-4 flex-wrap">
               {/* Left container */}
-              <div className="">
+              <div className="flex-1">
                 <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
                   <div className="border-b border-stroke px-7 py-4 dark:border-strokedark">
                     <h3 className="font-medium text-black dark:text-white">Personal Information</h3>
@@ -346,8 +344,8 @@ const Settings = () => {
                         />
                       </div>
 
-                      <div className="mb-5.5 flex justify-center gap-5.5">
-                        <div>
+                      <div className="mb-5.5 flex justify-wrap gap-5.5">
+                        <div className="flex-1">
                           <label
                             className="mb-3 block text-sm font-medium text-black dark:text-white"
                             htmlFor="address"
@@ -371,7 +369,7 @@ const Settings = () => {
                           </select>
 
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <label
                             className="mb-3 block text-sm font-medium text-black dark:text-white"
                             htmlFor="address"
@@ -419,7 +417,7 @@ const Settings = () => {
               </div>
 
               {/* Right container */}
-              <div className="">
+              <div className=" flex-1">
                 <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
                   <div className="border-b border-stroke px-7 py-4 dark:border-strokedark">
                     <h3 className="font-medium text-black dark:text-white">Personal Information</h3>
@@ -444,8 +442,8 @@ const Settings = () => {
                         />
                       </div>
 
-                      <div className="mb-5.5 flex flex-wrap gap-5.5 justify-center">
-                        <div>
+                      <div className="mb-5.5 flex flex-wrap gap-5.5">
+                        <div className="flex-1">
                           <label
                             className="mb-3 block text-sm font-medium text-black dark:text-white"
                             htmlFor="region"
@@ -475,7 +473,7 @@ const Settings = () => {
                           </select>
                           {regionError && <p className="text-red-500 text-sm mt-1">{regionError}</p>}
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <label
                             className="mb-3 block text-sm font-medium text-black dark:text-white"
                             htmlFor="city"
@@ -559,7 +557,7 @@ const Settings = () => {
 
             {/* Modify Button */}
             {!isEditable && (
-              <div className="pt-5">
+              <div className="pt-5 w-full flex flex-row-reverse">
                 <button
 
                   className="modify-button flex justify-center rounded bg-green-400 border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
@@ -591,8 +589,7 @@ const Settings = () => {
               </div>
             )}
           </div>
-        </div>
-      </div>
+
     </DefaultLayout>
   );
 }

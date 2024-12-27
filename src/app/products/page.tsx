@@ -11,6 +11,7 @@ import { setCategories } from "@/slices/category/category";
 import { setProducts } from "@/slices/product/product";
 import ProductSection from "./productSection/productSection";
 import CategorySection from "./categorySection/catergorySection";
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 export default function ProductPage() {
   const [activeSection, setActiveSection] = useState<string>("products");
@@ -46,7 +47,9 @@ export default function ProductPage() {
   return (
     <NextUIProvider>
       <DefaultLayout>
-        <div className="space-y-6 p-8">
+      <Breadcrumb pageName="Product" />
+
+        <div className="space-y-6 w-full ">
           <ButtonGroup>
             <Button
               color={activeSection === "products" ? "primary" : "default"}

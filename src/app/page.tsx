@@ -8,10 +8,7 @@ import Chart from "@/components/Charts/page";
 import { useAppSelector } from "@/hooks/hook";
 
 export default function Home() {
-  const user = useAppSelector(state => state.auth.token)
-  if (!user)
-    return <SignIn></SignIn>
-  else
+
     return (
       <DefaultLayout>
         <Chart />

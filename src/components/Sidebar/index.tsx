@@ -6,8 +6,10 @@ import Link from "next/link";
 import Image from "next/image";
 import SidebarItem from "@/components/Sidebar/SidebarItem";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import logo from "@/assets/logo.png";
+import { useAppDispatch } from "@/hooks/hook";
+import { removeToken } from "@/slices/authSlice";
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
@@ -20,8 +22,6 @@ const menuGroups = [
       { icon: "chart", label: "Chart", route: "/" },
       { icon: "product", label: "Product", route: "/products" },
       { icon: "orders", label: "Orders", route: "/order" },
-      { icon: "stock", label: "Stock", route: "/supplier" },
-      { icon: "import", label: "Import History", route: "/importHistory" },
       { icon: "settings", label: "Settings", route: "/settings" },
     ],
   },
@@ -30,53 +30,37 @@ const menuGroups = [
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const pathname = usePathname();
   const [activeItem, setActiveItem] = useState("");
-
+  const dispatch = useAppDispatch();
   useEffect(() => {
     setActiveItem(pathname);
   }, [pathname]);
 
   return (
     <motion.aside
-      initial={{ width: sidebarOpen ? "240px" : "80px" }}
-      animate={{ width: sidebarOpen ? "240px" : "80px" }}
+      initial={{ width: sidebarOpen ? "200px" : "64px" }}
+      animate={{ width: sidebarOpen ? "200px" : "64px" }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-0 z-50 flex h-screen flex-col overflow-hidden bg-white shadow-lg dark:bg-gray-900"
+      className="fixed left-0 top-0 z-40 flex h-screen flex-col overflow-hidden bg-white shadow-lg dark:bg-gray-900"
     >
       <div className="flex items-center justify-between px-4 py-5">
         <Link href="/" className={`flex items-center ${sidebarOpen ? '' : 'justify-center w-full'}`}>
           <Image
-            width={sidebarOpen ? 32 : 40}
-            height={sidebarOpen ? 32 : 40}
-            src="/images/logo/logo.png"
+            width={sidebarOpen ? 25 : 25}
+            height={sidebarOpen ? 25 : 25}
+            src={logo}
             alt="Logo"
-            className={`transition-all duration-300 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`}
+            className={`transition-all duration-300 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`}
           />
           {sidebarOpen && (
             <span className="text-xl font-bold text-gray-800 dark:text-white">
-              Dashboard
+              Arc
             </span>
           )}
         </Link>
-        {sidebarOpen && (
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="absolute -right-3 top-4 z-[1000] rounded-full bg-white p-1.5 text-gray-500 shadow-md hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-          >
-            <ChevronLeft size={20} />
-          </button>
-        )}
       </div>
 
-      {!sidebarOpen && (
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="absolute -right-3 top-4 rounded-full bg-white p-1.5 text-gray-500 shadow-md hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-        >
-          <ChevronRight size={20} />
-        </button>
-      )}
 
-      <nav className="flex-grow overflow-y-auto px-4 py-4">
+      <nav className={`flex-grow overflow-y-auto ${sidebarOpen ? 'px-4' : 'px-2'} py-4`}>
         {menuGroups.map((group, groupIndex) => (
           <div key={groupIndex} className="mb-6">
             {sidebarOpen && (
@@ -97,6 +81,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           </div>
         ))}
       </nav>
+      <div className={`mt-auto p-4 ${sidebarOpen ? '' : 'flex justify-center'}`}>
+        <button
+          onClick={() => {dispatch(removeToken())}}
+          className="flex items-center text-red-500 hover:text-red-600"
+        >
+          <LogOut size={20} className={`${sidebarOpen ? 'mr-2' : ''}`} />
+          {sidebarOpen && <span>Logout</span>}
+        </button>
+      </div>
     </motion.aside>
   );
 };

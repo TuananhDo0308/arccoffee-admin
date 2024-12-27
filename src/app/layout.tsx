@@ -7,6 +7,8 @@ import Loader from "@/components/common/Loader";
 import { AuthProvider } from "@/context/AuthContext";
 import { Metadata } from "next";
 import ReduxProvider from '@/lib/provider'
+import Sidebar from "@/components/Sidebar";
+import SidebarToggle from "@/components/Sidebar/SidebarToggle";
 
 export const metadata: Metadata = {
   title: "DoubleA coffee shop",
@@ -19,12 +21,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (   
     <AuthProvider>
       <html lang="en">        
         <body suppressHydrationWarning={true}>
             <div className="dark:bg-boxdark-2 w-full h-full dark:text-bodydark">
+
             <ReduxProvider>
               {children}
             </ReduxProvider>

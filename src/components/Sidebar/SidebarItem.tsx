@@ -33,7 +33,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     <li>
       <Link href={item.route}>
         <motion.div
-          className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium ${
+          className={`flex items-center rounded-lg ${
+            sidebarOpen ? 'px-3 py-2' : 'px-2 py-2'
+          } text-sm font-medium ${
             isActive
               ? "bg-blue-100 text-blue-600 dark:bg-blue-700 dark:text-white"
               : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -42,7 +44,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           whileTap={{ scale: 0.98 }}
         >
           <IconComponent
-            className={`mr-3 h-5 w-5 ${
+            className={`h-5 w-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'} ${
               isActive ? "text-blue-600 dark:text-white" : "text-gray-500 dark:text-gray-400"
             }`}
           />
