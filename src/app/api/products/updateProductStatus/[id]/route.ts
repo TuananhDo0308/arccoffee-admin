@@ -11,7 +11,7 @@ export const PATCH = async (req: NextRequest, { params }: { params: { id: string
             { status: 400 }
         );
     }
-
+    
     try {
         const token = req.headers.get('Authorization'); // Lấy token từ Header
 

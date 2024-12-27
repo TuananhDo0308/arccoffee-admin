@@ -1,23 +1,16 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { getCompletedOrders } from "@/API/orderAPI"; // Update to use getCompletedOrders
-import IconButton from "@mui/material/IconButton";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import InfoIcon from "@mui/icons-material/Info";
-import OrderDetailModal from "../ProcessingOrder/detailOrder"; // Import the OrderDetailModal component
-import { useAppSelector } from "@/hooks/hook";
-import { clientLinks, httpClient } from "@/utils";
 
-interface Order {
-  str_mahd: string;
-  str_ho_ten: string;
-  ldt_ngay_dat: string;
-  d_tong: number;
-}
+import React, { useState, useEffect } from "react";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Skeleton } from "@nextui-org/react";
+import { useAppSelector } from "@/hooks/hook";
+import { httpClient, clientLinks } from "@/utils";
+import { MoreVertical, Info } from 'lucide-react';
+import OrderDetailModal from "../ProcessingOrder/detailOrder";
 
 interface CompletedBill {
   id: string;
   items: any[];
+  customerName: string;
   customerId: string;
   shippingMethodId: string;
   status: string;
@@ -28,127 +21,121 @@ interface CompletedBill {
 }
 
 const CompletedOrderTable = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [showActions, setShowActions] = useState<number | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [completedBill, setCompletedBill] = useState<CompletedBill[]>([]);
-  
-  const token = useAppSelector(state => state.auth.token.accessToken)
+  const [completedBills, setCompletedBills] = useState<CompletedBill[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<CompletedBill | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const token = useAppSelector(state => state.auth.token.accessToken);
+
   useEffect(() => {
-    const fetchPendingBils = async () => {
+    fetchCompletedBills();
+  }, [token]);
+
+  const fetchCompletedBills = async () => {
+    setIsLoading(true);
+    try {
       const response = await httpClient.get({
         url: clientLinks.bill.getCompletedBills,
         token: token,
-      })
-
-      const data = response.data;
-      setCompletedBill(data);
+      });
+      setCompletedBills(response.data);
+    } catch (error) {
+      console.error("Error fetching completed bills:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    fetchPendingBils();
-  }, [token])
+  const columns = [
+    { key: "id", label: "Order ID" },
+    { key: "customerName", label: "Customer Name" },
+    { key: "orderDate", label: "Order Date" },
+    { key: "totalPrice", label: "Total Amount" },
+    { key: "status", label: "Status" },
+    { key: "actions", label: "Actions" },
+  ];
 
-  // useEffect(() => {
-  //   async function fetchOrders() {
-  //     try {
-  //       const orderData = await getCompletedOrders();
-  //       setOrders(orderData.orders);
-  //     } catch (error) {
-  //       console.error("Error fetching completed orders:", error);
-  //     }
-  //   }
-  //   fetchOrders();
-  // }, []);
-
-  const handleOpenDetail = (order: Order) => {
-    setSelectedOrder(order);
-    setShowActions(null);
+  const renderCell = (item: CompletedBill, columnKey: React.Key) => {
+    switch (columnKey) {
+      case "id":
+        return <p className="text-bold">{item.id}</p>;
+      case "customerName":
+        return <p>{item.customerName}</p>;
+      case "orderDate":
+        return <p>{new Date(item.orderDate).toLocaleDateString()}</p>;
+      case "totalPrice":
+        return <p>{item.totalPrice.toLocaleString()} VND</p>;
+      case "status":
+        return <p>Completed</p>;
+      case "actions":
+        return (
+          <Dropdown>
+            <DropdownTrigger>
+              <Button isIconOnly variant="light">
+                <MoreVertical size={20} />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Order actions">
+              <DropdownItem onPress={() => setSelectedOrder(item)} startContent={<Info size={20} />}>
+                View Details
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        );
+      default:
+        return <p>N/A</p>;
+    }
   };
 
   return (
-    <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div className="px-4 py-6 md:px-6 xl:px-7.5">
-        <h4 className="text-xl font-semibold text-black dark:text-white">
-          Completed Orders
-        </h4>
-      </div>
-
-      <div className="grid grid-cols-7 border-t border-stroke px-4 py-4.5 dark:border-strokedark md:px-6 2xl:px-7.5">
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Order ID</p>
-        </div>
-        <div className="col-span-2 flex items-center">
-          <p className="font-medium">Customer ID</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Order Date</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Total Amount</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Status</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Actions</p>
-        </div>
-      </div>
-
-      {completedBill.map((order, index) => (
-        <div
-          className="grid grid-cols-7 border-t border-stroke px-4 py-4.5 dark:border-strokedark md:px-6 2xl:px-7.5"
-          key={index}
+    <>
+      <Table aria-label="Completed Orders Table">
+        <TableHeader columns={columns}>
+          {(column) => (
+            <TableColumn key={column.key} align={column.key === "actions" ? "center" : "start"}>
+              {column.label}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody 
+          items={completedBills}
+          emptyContent={isLoading ? " " : "No completed orders found"}
+          loadingContent={<LoadingSkeleton />}
+          loadingState={isLoading ? "loading" : "idle"}
         >
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">{order.id}</p>
-          </div>
-          <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{order.customerId}</p>
-          </div>
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">
-              {new Date(order.orderDate).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">${order.totalPrice}</p>
-          </div>
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">Completed</p> {/* Status column */}
-          </div>
-          <div className="relative col-span-1 flex items-center">
-            <IconButton
-              aria-label="actions"
-              onClick={() =>
-                setShowActions(showActions === index ? null : index)
-              }
-            >
-              <MoreVertIcon />
-            </IconButton>
-
-            {showActions === index && (
-              <div className="absolute right-0 top-10 z-10 rounded border bg-white p-2 shadow-md">
-                <IconButton
-                  aria-label="details"
-                  onClick={() => handleOpenDetail(order)}
-                >
-                  <InfoIcon />
-                </IconButton>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
+          {(item) => (
+            <TableRow key={item.id}>
+              {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
       {selectedOrder && (
-        <OrderDetailModal 
-          orderId={selectedOrder} 
-          onClose={() => setSelectedOrder(null)} 
-          isCompleted={true}
+        <OrderDetailModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onComplete={() => {}} // This is a no-op for completed orders
         />
       )}
-    </div>
+    </>
   );
 };
 
+const LoadingSkeleton = () => (
+  <>
+    {[...Array(5)].map((_, index) => (
+      <TableRow key={index}>
+        {[...Array(6)].map((_, cellIndex) => (
+          <TableCell key={cellIndex}>
+            <Skeleton className="w-full">
+              <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
+            </Skeleton>
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </>
+);
+
 export default CompletedOrderTable;
+

@@ -1,40 +1,30 @@
 "use client";
-import React, { useState, ReactNode } from "react";
+import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { useAuth } from "@/context/AuthContext";
+import { motion } from "framer-motion";
 
 export default function DefaultLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user=useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
-    <>
-      {/* <!-- ===== Page Wrapper Start ===== --> */}
-      <div className="flex h h-full">
-        {/* <!-- ===== Sidebar Start ===== --> */}
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        {/* <!-- ===== Sidebar End ===== --> */}
-
-        {/* <!-- ===== Content Area Start ===== --> */}
-        <div className="relative flex flex-1 flex-col lg:ml-72.5">
-          {/* <!-- ===== Header Start ===== --> */}
-          {/* <!-- ===== Header End ===== --> */}
-
-          {/* <!-- ===== Main Content Start ===== --> */}
-          <main>
-            <div className="mx-auto h-full max-w-screen-2xl p-4 md:p-6 2xl:p-10">
-              {children}
-            </div>
-          </main>
-          {/* <!-- ===== Main Content End ===== --> */}
-        </div>
-        {/* <!-- ===== Content Area End ===== --> */}
-      </div>
-      {/* <!-- ===== Page Wrapper End ===== --> */}
-    </>
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <motion.div
+        initial={{ marginLeft: sidebarOpen ? "240px" : "80px" }}
+        animate={{ marginLeft: sidebarOpen ? "240px" : "80px" }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="flex flex-1 flex-col overflow-hidden"
+      >
+        <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 dark:bg-gray-800">
+          {children}
+        </main>
+      </motion.div>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
@@ -11,7 +11,7 @@ import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
 import { Textarea } from "@nextui-org/input";
 import { Select, SelectItem } from "@nextui-org/select";
-import { Card, CardBody, CardHeader, CardFooter } from "@nextui-org/card";
+import { ModalHeader, ModalBody, ModalFooter } from "@nextui-org/modal";
 import Image from "next/image";
 
 const schema = yup.object().shape({
@@ -29,11 +29,13 @@ const schema = yup.object().shape({
     }),
 });
 
-export default function EditProductForm({ product, onClose }) {
+export default function EditProductForm({ product, onClose, onSuccess }) {
   const dispatch = useAppDispatch();
   const categories = useAppSelector(state => state.category.categories);
   const token = useAppSelector(state => state.auth.token.accessToken);
   const [imagePreview, setImagePreview] = useState(product.image);
+  const [isLoading, setIsLoading] = useState(false); // Added loading state
+  const fileInputRef = useRef(null);
 
   const { control, handleSubmit, formState: { errors }, setValue } = useForm({
     resolver: yupResolver(schema),
@@ -51,10 +53,16 @@ export default function EditProductForm({ product, onClose }) {
     setValue("description", product.description);
     setValue("price", product.price);
     setValue("stock", product.stock);
-    setValue("categoryId", product.categoryId);
-  }, [product, setValue]);
+    
+    // Find the category ID based on the category name
+    const category = categories.find(cat => cat.name === product.categoryName);
+    if (category) {
+      setValue("categoryId", category.id);
+    }
+  }, [product, categories, setValue]);
 
   const onSubmit = async (data) => {
+    setIsLoading(true); // Set loading to true before API call
     const formData = new FormData();
     Object.keys(data).forEach(key => {
       if (key === 'image') {
@@ -75,9 +83,12 @@ export default function EditProductForm({ product, onClose }) {
       });
 
       dispatch(setProducts(response.data.data));
+      onSuccess();
       onClose();
     } catch (error) {
       console.error("Failed to update product:", error);
+    } finally {
+      setIsLoading(false); // Set loading to false after API call, regardless of success or failure
     }
   };
 
@@ -89,22 +100,28 @@ export default function EditProductForm({ product, onClose }) {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
+      setValue("image", e.target.files);
     }
   };
 
+  const handleImageClick = () => {
+    fileInputRef.current.click();
+  };
+
   return (
-    <Card>
-      <CardHeader>
+    <>
+      <ModalHeader>
         <h4 className="text-2xl font-bold">Edit Product</h4>
-      </CardHeader>
-      <CardBody>
+      </ModalHeader>
+      <ModalBody>
         <div className="flex justify-center mb-4">
           <Image
             src={imagePreview}
             alt="Product"
             width={200}
             height={200}
-            className="rounded-md"
+            className="rounded-md cursor-pointer"
+            onClick={handleImageClick}
           />
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -172,6 +189,7 @@ export default function EditProductForm({ product, onClose }) {
                 {...field}
                 label="Category"
                 placeholder="Select a category"
+                selectedKeys={[field.value]}
                 errorMessage={errors.categoryId?.message}
               >
                 {categories.map((category) => (
@@ -197,18 +215,20 @@ export default function EditProductForm({ product, onClose }) {
                   field.onChange(e.target.files);
                   handleImageChange(e);
                 }}
+                ref={fileInputRef}
+                className="hidden"
               />
             )}
           />
         </form>
-      </CardBody>
-      <CardFooter>
-        <div className="flex justify-end space-x-2">
-          <Button color="danger" variant="light" onPress={onClose}>Cancel</Button>
-          <Button color="primary" onPress={handleSubmit(onSubmit)}>Update Product</Button>
-        </div>
-      </CardFooter>
-    </Card>
+      </ModalBody>
+      <ModalFooter>
+        <Button color="danger" variant="light" onPress={onClose}>Cancel</Button>
+        <Button color="primary" onPress={handleSubmit(onSubmit)} isLoading={isLoading}> {/* Updated button */}
+          {isLoading ? 'Updating...' : 'Update Product'}
+        </Button>
+      </ModalFooter>
+    </>
   );
 }
 

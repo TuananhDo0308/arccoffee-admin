@@ -60,12 +60,7 @@ export default function ProductPage() {
             >
               Categories
             </Button>
-            <Button
-              color={activeSection === "suppliers" ? "primary" : "default"}
-              onClick={() => setActiveSection("suppliers")}
-            >
-              Suppliers
-            </Button>
+          
           </ButtonGroup>
 
           {activeSection === "products" && <ProductSection />}

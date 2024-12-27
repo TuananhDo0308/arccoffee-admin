@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
@@ -11,7 +11,7 @@ import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
 import { Textarea } from "@nextui-org/input";
 import { Select, SelectItem } from "@nextui-org/select";
-import { Card, CardBody, CardHeader, CardFooter } from "@nextui-org/card";
+import { ModalHeader, ModalBody, ModalFooter } from "@nextui-org/modal";
 
 const schema = yup.object().shape({
   name: yup.string().required("Product name is required"),
@@ -28,16 +28,19 @@ const schema = yup.object().shape({
     }),
 });
 
-export default function AddProductForm({ onClose }) {
+export default function AddProductForm({ onClose, onSuccess }) {
   const dispatch = useAppDispatch();
   const categories = useAppSelector(state => state.category.categories);
   const token = useAppSelector(state => state.auth.token.accessToken);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema)
   });
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
     const formData = new FormData();
     Object.keys(data).forEach(key => {
       if (key === 'image') {
@@ -56,21 +59,23 @@ export default function AddProductForm({ onClose }) {
       });
 
       dispatch(setProducts(response.data.data));
+      onSuccess();
       onClose();
     } catch (error) {
       console.error("Failed to add product:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <>
+      <ModalHeader>
         <h4 className="text-2xl font-bold">Add New Product</h4>
-      </CardHeader>
-      <CardBody>
+      </ModalHeader>
+      <ModalBody>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* ... (form fields remain unchanged) */}
-        <Controller
+          <Controller
             name="name"
             control={control}
             render={({ field }) => (
@@ -160,14 +165,14 @@ export default function AddProductForm({ onClose }) {
             )}
           />
         </form>
-      </CardBody>
-      <CardFooter>
-        <div className="flex justify-end space-x-2">
-          <Button color="danger" variant="light" onPress={onClose}>Cancel</Button>
-          <Button color="primary" type="submit" onPress={handleSubmit(onSubmit)}>Add Product</Button>
-        </div>
-      </CardFooter>
-    </Card>
+      </ModalBody>
+      <ModalFooter>
+        <Button color="danger" variant="light" onPress={onClose}>Cancel</Button>
+        <Button color="primary" onPress={handleSubmit(onSubmit)} isLoading={isLoading}>
+          {isLoading ? 'Adding...' : 'Add Product'}
+        </Button>
+      </ModalFooter>
+    </>
   );
 }
 

@@ -1,174 +1,155 @@
-import React, { useState, useEffect } from "react";
-import { getProcessingOrder, completeOrder, getCompletedOrders } from "@/API/orderAPI";
-import IconButton from "@mui/material/IconButton";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import InfoIcon from "@mui/icons-material/Info";
-import OrderDetailModal from "./detailOrder";
-import { httpClient, clientLinks } from "@/utils"; 
-import { Token } from "aws-sdk";
-import { useAppSelector } from "@/hooks/hook";
+"use client";
 
-interface Order {
-  str_mahd: string;
-  str_ho_ten: string;
-  ldt_ngay_dat: string;
-  d_tong: number;
-}
+import React, { useState, useEffect } from "react";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Skeleton } from "@nextui-org/react";
+import { useAppSelector } from "@/hooks/hook";
+import { httpClient, clientLinks } from "@/utils";
+import { MoreVertical, CheckCircle, Info } from 'lucide-react';
+import OrderDetailModal from "./detailOrder";
 
 interface PendingBill {
   id: string;
-  items: any[]; 
+  items: any[];
   customerId: string;
   shippingMethodId: string;
-  status: string; 
-  orderDate: string; 
+  status: string;
+  customerName: string;
+  orderDate: string;
   paymentId: string;
-  voucherId: string | null; 
+  voucherId: string | null;
   totalPrice: number;
 }
 
-const OrderTable = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [showActions, setShowActions] = useState<number | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [pendingBill, setPendingBill] = useState<PendingBill[]>([]);
+const ProcessingOrderTable = () => {
+  const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<PendingBill | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const token = useAppSelector(state => state.auth.token.accessToken);
 
-  const token = useAppSelector(state => state.auth.token.accessToken)
   useEffect(() => {
-    const fetchPendingBils = async () => {
+    fetchPendingBills();
+  }, [token]);
+
+  const fetchPendingBills = async () => {
+    setIsLoading(true);
+    try {
       const response = await httpClient.get({
         url: clientLinks.bill.getPendingBills,
         token: token,
-      })
-
-      const data = response.data;
-      setPendingBill(data);
+      });
+      setPendingBills(response.data);
+    } catch (error) {
+      console.error("Error fetching pending bills:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    fetchPendingBils();
-  }, [token])
-
-  // useEffect(() => {
-  //   async function fetchOrders() {
-  //     try {
-  //       const orderData = await getProcessingOrder();
-  //       setOrders(orderData.orders);
-  //     } catch (error) {
-  //       console.error("Error fetching orders:", error);
-  //     }
-  //   }
-  //   fetchOrders();
-  // }, []);
-
-  const handleOpenDetail = (order: Order) => {
-    setSelectedOrder(order);
-    setShowActions(null);
   };
 
-  const markOrderComplete = async (orderId: string) => {
+  const handleCompleteOrder = async (orderId: string) => {
     try {
-      await completeOrder(orderId);
-      const updatedOrders = orders.filter((order) => order.str_mahd !== orderId);
-      setOrders(updatedOrders);
-      console.log(`Order ${orderId} marked as completed.`);
-      setShowActions(null);
+      await httpClient.patch({
+        url: clientLinks.bill.updateStatusBills(orderId),
+        token: token,
+      });
+      fetchPendingBills();
     } catch (error) {
       console.error("Error completing order:", error);
-      alert("Failed to complete the order. Please try again.");
+    }
+  };
+
+  const columns = [
+    { key: "id", label: "Order ID" },
+    { key: "customerName", label: "Customer Name" },
+    { key: "orderDate", label: "Order Date" },
+    { key: "totalPrice", label: "Total Amount" },
+    { key: "status", label: "Status" },
+    { key: "actions", label: "Actions" },
+  ];
+
+  const renderCell = (item: PendingBill, columnKey: React.Key) => {
+    switch (columnKey) {
+      case "id":
+        return <p className="text-bold">{item.id}</p>;
+      case "customerName":
+        return <p>{item.customerName}</p>;
+      case "orderDate":
+        return <p>{new Date(item.orderDate).toLocaleDateString()}</p>;
+      case "totalPrice":
+        return <p>{item.totalPrice.toLocaleString()} VND</p>;
+      case "status":
+        return <p>Processing</p>;
+      case "actions":
+        return (
+          <Dropdown>
+            <DropdownTrigger>
+              <Button isIconOnly variant="light">
+                <MoreVertical size={20} />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Order actions">
+              <DropdownItem onPress={() => handleCompleteOrder(item.id)} startContent={<CheckCircle size={20} />}>
+                Complete Order
+              </DropdownItem>
+              <DropdownItem onPress={() => setSelectedOrder(item)} startContent={<Info size={20} />}>
+                View Details
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        );
+      default:
+        return <p>N/A</p>;
     }
   };
 
   return (
-    <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div className="px-4 py-6 md:px-6 xl:px-7.5">
-        <h4 className="text-xl font-semibold text-black dark:text-white">
-          Processing Order
-        </h4>
-      </div>
-
-      <div className="grid grid-cols-7 border-t border-stroke px-4 py-4.5 dark:border-strokedark md:px-6 2xl:px-7.5">
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Order ID</p>
-        </div>
-        <div className="col-span-2 flex items-center">
-          <p className="font-medium">Customer ID</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Order Date</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Total Amount</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Status</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Actions</p>
-        </div>
-      </div>
-
-      {pendingBill.map((order, index) => (
-        <div
-          className="grid grid-cols-7 border-t border-stroke px-4 py-4.5 dark:border-strokedark md:px-6 2xl:px-7.5"
-          key={index}
+    <>
+      <Table aria-label="Processing Orders Table">
+        <TableHeader columns={columns}>
+          {(column) => (
+            <TableColumn key={column.key} align={column.key === "actions" ? "center" : "start"}>
+              {column.label}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody 
+          items={pendingBills}
+          emptyContent={isLoading ? " " : "No pending orders found"}
+          loadingContent={<LoadingSkeleton />}
+          loadingState={isLoading ? "loading" : "idle"}
         >
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">{order.id}</p>
-          </div>
-          <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{order.customerId}</p>
-          </div>
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">
-              {new Date(order.orderDate).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">${order.totalPrice}</p>
-          </div>
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">Processing</p> {/* Default Process */}
-          </div>
-          <div className="relative col-span-1 flex items-center">
-            <IconButton
-              aria-label="actions"
-              onClick={() => setShowActions(showActions === index ? null : index)}
-            >
-              <MoreVertIcon />
-            </IconButton>
+          {(item) => (
+            <TableRow key={item.id}>
+              {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
-            {showActions === index && (
-              <div className="absolute right-0 top-10 z-10 rounded border bg-white p-2 shadow-md">
-                <IconButton
-                  aria-label="complete"
-                  className="text-white"
-                  onClick={() => markOrderComplete(order.str_mahd)}
-                >
-                  <CheckCircleIcon />
-                </IconButton>
-                <IconButton
-                  aria-label="details"
-                  onClick={() => handleOpenDetail(order)}
-                >
-                  <InfoIcon />
-                </IconButton>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-
-      {/* {selectedOrder && (
-        <OrderDetailModal 
-          orderId={selectedOrder}
+      {selectedOrder && (
+        <OrderDetailModal
+          order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
-          onComplete={markOrderComplete} // Pass the complete order function to the modal
-          isCompleted={false}
+          onComplete={handleCompleteOrder}
         />
-      )} */}
-    </div>
+      )}
+    </>
   );
 };
 
-export default OrderTable;
+const LoadingSkeleton = () => (
+  <>
+    {[...Array(5)].map((_, index) => (
+      <TableRow key={index}>
+        {[...Array(6)].map((_, cellIndex) => (
+          <TableCell key={cellIndex}>
+            <Skeleton className="w-full">
+              <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
+            </Skeleton>
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </>
+);
+
+export default ProcessingOrderTable;
