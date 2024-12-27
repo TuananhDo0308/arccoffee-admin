@@ -6,7 +6,7 @@ export const GET = async () => {
 
     try {
         const response = await httpClient.get({
-            url: apiLinks.user.region,
+            url: apiLinks.admin.region,
         })
 
         const data = response.data;

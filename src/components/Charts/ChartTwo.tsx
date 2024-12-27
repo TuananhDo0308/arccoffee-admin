@@ -1,266 +1,233 @@
 "use client";
 
 import { ApexOptions } from "apexcharts";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { getRevenueProducts, getCategories } from "@/API/productAPI";
+import { useAppSelector } from "@/hooks/hook";
+import { clientLinks, httpClient } from "@/utils";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-interface ChartTwoState {
-  series: {
+interface CompletedBill {
+  id: string;
+  items: Array<{
+    productId: string;
     name: string;
-    data: number[];
-  }[];
+    price: number;
+    image: string;
+    quantity: number;
+  }>;
+  customerId: string;
+  customerName: string;
+  shippingMethodId: string;
+  status: string;
+  orderDate: string;
+  paymentId: string;
+  voucherId: string | null;
+  totalPrice: number;
 }
 
 const ChartTwo: React.FC = () => {
-  const [selectedMonth, setSelectedMonth] = useState<string>("0");
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [categories, setCategories] = useState<any[]>([]); // State to hold categories
-  const [products, setProducts] = useState<string[]>([]);
-  const [series, setSeries] = useState<any[]>([
-    {
-      name: "Sales",
-      data: [],
-    },
-  ]);
+  const token = useAppSelector(state => state.auth.token.accessToken);
+  const [bills, setBills] = useState<CompletedBill[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [years, setYears] = useState<string[]>([]);
+  const months = useMemo(() => ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], []);
 
-  // Fetch categories when the component mounts
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const response = await getCategories();
-        setCategories([{ str_malh: "All", str_tenlh: "All Categories" }, ...response.list]); // Add "All" option
+        const response = await httpClient.get({
+          url: clientLinks.bill.getCompletedBills,
+          token,
+        });
+        const fetchedBills: CompletedBill[] = response.data;
+        setBills(fetchedBills);
+        const uniqueYears = Array.from(new Set(fetchedBills.map(bill => new Date(bill.orderDate).getFullYear().toString())));
+        setYears(uniqueYears.sort());
+        const latestYear = uniqueYears[uniqueYears.length - 1];
+        setSelectedYear(latestYear);
+        setSelectedMonth('01');
       } catch (error) {
-        console.error("Failed to fetch categories", error);
+        console.error("Failed to fetch data", error);
       }
     };
 
-    fetchCategories();
-  }, []);
+    fetchData();
+  }, [token]);
 
-  const fetchData = async (categoryId: string, year: string, month: string) => {
-    try {
-      const response = await getRevenueProducts(categoryId, year, month);
+  const processedData = useMemo(() => {
+    if (!selectedYear || !selectedMonth) return { revenueData: [], ordersData: [], categories: [], totalRevenue: 0, totalOrders: 0 };
 
-      const data = response.data;
-      const productNames = Object.values(data).map((item: any) => item.name);
-      const productQuantities = Object.values(data).map(
-        (item: any) => item.totalRevenue
-      );
+    const dailyData: { [key: string]: { revenue: number, orders: number } } = {};
+    let totalRevenue = 0;
+    let totalOrders = 0;
 
-      setProducts(productNames);
-      setSeries([{ name: "Revenue", data: productQuantities }]);
-    } catch (error) {
-      console.error("Failed to fetch data", error);
-    }
-  };
+    bills.forEach(bill => {
+      const billDate = new Date(bill.orderDate);
+      if (billDate.getFullYear().toString() === selectedYear && (billDate.getMonth() + 1).toString().padStart(2, '0') === selectedMonth) {
+        const day = billDate.getDate().toString().padStart(2, '0');
+        if (!dailyData[day]) {
+          dailyData[day] = { revenue: 0, orders: 0 };
+        }
+        dailyData[day].revenue += bill.totalPrice;
+        dailyData[day].orders += 1;
+        totalRevenue += bill.totalPrice;
+        totalOrders += 1;
+      }
+    });
 
-  useEffect(() => {
-    // Lấy dữ liệu lần đầu khi component được render
-    fetchData(selectedCategory, selectedYear, selectedMonth);
-  }, [selectedCategory, selectedYear, selectedMonth]);
+    const daysInMonth = new Date(parseInt(selectedYear), parseInt(selectedMonth), 0).getDate();
+    const categories = Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0'));
+    const revenueData = categories.map(day => dailyData[day]?.revenue || 0);
+    const ordersData = categories.map(day => dailyData[day]?.orders || 0);
 
-  const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const month = e.target.value;
-    setSelectedMonth(month);
-    // Gọi API để lấy dữ liệu của tháng được chọn
-    fetchData(selectedCategory, selectedYear, month);
-  };
-
-  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const year = e.target.value;
-    setSelectedYear(year);
-    // Gọi API để lấy dữ liệu của tháng và năm được chọn
-    fetchData(selectedCategory, year, selectedMonth);
-  };
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const category = e.target.value;
-    setSelectedCategory(category);
-    fetchData(category, selectedYear, selectedMonth);
-  };
+    return { revenueData, ordersData, categories, totalRevenue, totalOrders };
+  }, [bills, selectedYear, selectedMonth]);
 
   const options: ApexOptions = {
-    colors: ["#3C50E0", "#80CAEE"],
     chart: {
-      fontFamily: "Satoshi, sans-serif",
-      type: "bar",
-      height: 335,
-      stacked: true,
-      toolbar: {
-        show: false,
-      },
+      height: 350,
+      type: 'line',
       zoom: {
-        enabled: false,
+        enabled: false
       },
-    },
-
-    responsive: [
-      {
-        breakpoint: 1536,
-        options: {
-          plotOptions: {
-            bar: {
-              borderRadius: 0,
-              columnWidth: "25%",
-            },
-          },
-        },
-      },
-    ],
-    plotOptions: {
-      bar: {
-        horizontal: false,
-        borderRadius: 0,
-        columnWidth: "25%",
-        borderRadiusApplication: "end",
-        borderRadiusWhenStacked: "last",
-      },
+      toolbar: {
+        show: false
+      }
     },
     dataLabels: {
-      enabled: false,
+      enabled: false
     },
-
-    xaxis: {
-      categories: products,
+    stroke: {
+      width: [4, 4],
+      curve: 'smooth'
     },
     legend: {
-      position: "top",
-      horizontalAlign: "left",
-      fontFamily: "Satoshi",
-      fontWeight: 500,
-      fontSize: "14px",
-
-      markers: {
-        radius: 99,
+      tooltipHoverFormatter: function (val, opts) {
+        return val + ' - ' + opts.w.globals.series[opts.seriesIndex][opts.dataPointIndex] + ''
+      }
+    },
+    markers: {
+      size: 6,
+      hover: {
+        sizeOffset: 3
+      }
+    },
+    xaxis: {
+      categories: processedData.categories,
+      title: {
+        text: 'Day of Month'
+      }
+    },
+    yaxis: [
+      {
+        title: {
+          text: "Revenue (VND)",
+        },
       },
+      {
+        opposite: true,
+        title: {
+          text: "Number of Orders"
+        }
+      }
+    ],
+    tooltip: {
+      y: [
+        {
+          title: {
+            formatter: function (val) {
+              return val + " (VND)"
+            }
+          }
+        },
+        {
+          title: {
+            formatter: function (val) {
+              return val + " orders"
+            }
+          }
+        }
+      ]
     },
-    fill: {
-      opacity: 1,
+    grid: {
+      borderColor: '#f1f1f1',
     },
+    colors: ['#008FFB', '#00E396']
+  };
+
+  const series = [
+    {
+      name: "Revenue",
+      type: 'line',
+      data: processedData.revenueData,
+    },
+    {
+      name: "Number of Orders",
+      type: 'line',
+      data: processedData.ordersData,
+    }
+  ];
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedYear(e.target.value);
+  };
+
+  const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedMonth(e.target.value);
   };
 
   return (
-    <div className="col-span-12 w-full rounded-sm border border-stroke bg-white p-7.5 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-4">
-      <div className="mb-4 justify-between gap-4 sm:flex">
+    <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
+      <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap mb-4">
         <div>
-          <h4 className="text-xl font-semibold text-black dark:text-white">
-            Profit this {selectedMonth === "0" ? "All" : selectedMonth} {selectedYear}
+          <h4 className="text-xl font-bold text-black dark:text-white">
+            Daily Revenue and Orders
           </h4>
         </div>
-
-        <div className="relative z-20 inline-block">
+        <div className="flex items-center gap-3">
           <select
-            name="category"
-            id="category"
-            value={selectedCategory}
-            onChange={handleCategoryChange}
-            className="relative z-20 inline-flex appearance-none bg-transparent py-1 pl-3 pr-8 text-sm font-medium outline-none"
+            value={selectedYear}
+            onChange={handleYearChange}
+            className="border rounded p-1"
           >
-            {categories.map(category => (
-              <option key={category.str_malh} value={category.str_malh}>
-                {category.str_tenlh}
-              </option>
+            {years.map((year) => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+          <select
+            value={selectedMonth}
+            onChange={handleMonthChange}
+            className="border rounded p-1"
+          >
+            {months.map((month) => (
+              <option key={month} value={month}>{month}</option>
             ))}
           </select>
         </div>
-
-        <div className="relative z-20 inline-block">
-          <select
-            name="year"
-            id="year"
-            value={selectedYear}
-            onChange={handleYearChange}
-            className="relative z-20 inline-flex appearance-none bg-transparent py-1 pl-3 pr-8 text-sm font-medium outline-none"
-          >
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-          </select>
-          <span className="absolute right-3 top-1/2 z-10 -translate-y-1/2">
-            <svg
-              width="10"
-              height="6"
-              viewBox="0 0 10 6"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M0.47072 1.08816C0.47072 1.02932 0.500141 0.955772 0.54427 0.911642C0.647241 0.808672 0.809051 0.808672 0.912022 0.896932L4.85431 4.60386C4.92785 4.67741 5.06025 4.67741 5.14851 4.60386L9.09079 0.896932C9.19376 0.793962 9.35557 0.808672 9.45854 0.911642C9.56151 1.01461 9.5468 1.17642 9.44383 1.27939L5.50155 4.98632C5.22206 5.23639 4.78076 5.23639 4.51598 4.98632L0.558981 1.27939C0.50014 1.22055 0.47072 1.16171 0.47072 1.08816Z"
-                fill="#637381"
-              />
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M1.22659 0.546578L5.00141 4.09604L8.76422 0.557869C9.08459 0.244537 9.54201 0.329403 9.79139 0.578788C10.112 0.899434 10.0277 1.36122 9.77668 1.61224L9.76644 1.62248L5.81552 5.33722C5.36257 5.74249 4.6445 5.7544 4.19352 5.32924C4.19327 5.32901 4.19377 5.32948 4.19352 5.32924L0.225953 1.61241C0.102762 1.48922 -4.20186e-08 1.31674 -3.20269e-08 1.08816C-2.40601e-08 0.905899 0.0780105 0.712197 0.211421 0.578787C0.494701 0.295506 0.935574 0.297138 1.21836 0.539529L1.22659 0.546578ZM4.51598 4.98632C4.78076 5.23639 5.22206 5.23639 5.50155 4.98632L9.44383 1.27939C9.5468 1.17642 9.56151 1.01461 9.45854 0.911642C9.35557 0.808672 9.19376 0.793962 9.09079 0.896932L5.14851 4.60386C5.06025 4.67741 4.92785 4.67741 4.85431 4.60386L0.912022 0.896932C0.809051 0.808672 0.647241 0.808672 0.54427 0.911642C0.500141 0.955772 0.47072 1.02932 0.47072 1.08816C0.47072 1.16171 0.50014 1.22055 0.558981 1.27939L4.51598 4.98632Z"
-                fill="#637381"
-              />
-            </svg>
-          </span>
-        </div>
-
-        <div>
-          <div className="relative z-20 inline-block">
-            <select
-              name="month"
-              id="month"
-              value={selectedMonth === "0" ? "All" : selectedMonth}
-              onChange={handleMonthChange}
-              className="relative z-20 inline-flex appearance-none bg-transparent py-1 pl-3 pr-8 text-sm font-medium outline-none"
-            >
-              <option value="0">All</option>
-              <option value="1">January</option>
-              <option value="2">February</option>
-              <option value="3">March</option>
-              <option value="4">April</option>
-              <option value="5">May</option>
-              <option value="6">June</option>
-              <option value="7">July</option>
-              <option value="8">August</option>
-              <option value="9">September</option>
-              <option value="10">October</option>
-              <option value="11">November</option>
-              <option value="12">December</option>
-            </select>
-            <span className="absolute right-3 top-1/2 z-10 -translate-y-1/2">
-              <svg
-                width="10"
-                height="6"
-                viewBox="0 0 10 6"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M0.47072 1.08816C0.47072 1.02932 0.500141 0.955772 0.54427 0.911642C0.647241 0.808672 0.809051 0.808672 0.912022 0.896932L4.85431 4.60386C4.92785 4.67741 5.06025 4.67741 5.14851 4.60386L9.09079 0.896932C9.19376 0.793962 9.35557 0.808672 9.45854 0.911642C9.56151 1.01461 9.5468 1.17642 9.44383 1.27939L5.50155 4.98632C5.22206 5.23639 4.78076 5.23639 4.51598 4.98632L0.558981 1.27939C0.50014 1.22055 0.47072 1.16171 0.47072 1.08816Z"
-                  fill="#637381"
-                />
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M1.22659 0.546578L5.00141 4.09604L8.76422 0.557869C9.08459 0.244537 9.54201 0.329403 9.79139 0.578788C10.112 0.899434 10.0277 1.36122 9.77668 1.61224L9.76644 1.62248L5.81552 5.33722C5.36257 5.74249 4.6445 5.7544 4.19352 5.32924C4.19327 5.32901 4.19377 5.32948 4.19352 5.32924L0.225953 1.61241C0.102762 1.48922 -4.20186e-08 1.31674 -3.20269e-08 1.08816C-2.40601e-08 0.905899 0.0780105 0.712197 0.211421 0.578787C0.494701 0.295506 0.935574 0.297138 1.21836 0.539529L1.22659 0.546578ZM4.51598 4.98632C4.78076 5.23639 5.22206 5.23639 5.50155 4.98632L9.44383 1.27939C9.5468 1.17642 9.56151 1.01461 9.45854 0.911642C9.35557 0.808672 9.19376 0.793962 9.09079 0.896932L5.14851 4.60386C5.06025 4.67741 4.92785 4.67741 4.85431 4.60386L0.912022 0.896932C0.809051 0.808672 0.647241 0.808672 0.54427 0.911642C0.500141 0.955772 0.47072 1.02932 0.47072 1.08816C0.47072 1.16171 0.50014 1.22055 0.558981 1.27939L4.51598 4.98632Z"
-                  fill="#637381"
-                />
-              </svg>
-            </span>
-          </div>
-        </div>
       </div>
-
       <div>
-        <div id="chartTwo" className="-mb-9 -ml-5">
+        <div id="chartTwo" className="-ml-5">
           <ReactApexChart
             options={options}
             series={series}
-            type="bar"
+            type="line"
             height={350}
-            width={"100%"}
           />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h6 className="text-sm font-semibold mb-2">Total Revenue ({selectedYear}-{selectedMonth})</h6>
+          <p className="text-2xl font-bold">{processedData.totalRevenue.toLocaleString()} VND</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h6 className="text-sm font-semibold mb-2">Total Orders ({selectedYear}-{selectedMonth})</h6>
+          <p className="text-2xl font-bold">{processedData.totalOrders.toLocaleString()}</p>
         </div>
       </div>
     </div>
@@ -268,3 +235,4 @@ const ChartTwo: React.FC = () => {
 };
 
 export default ChartTwo;
+
