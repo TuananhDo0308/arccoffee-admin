@@ -1,20 +1,23 @@
-import Chart from "@/components/Charts/page";
-import { Metadata } from "next";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import React from "react";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Next.js Chart | TailAdmin - Next.js Dashboard Template",
-  description:
-    "This is Next.js Chart page for TailAdmin - Next.js Tailwind CSS Admin Dashboard Template",
-};
+import React from "react"
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import ChartOne from "@/components/Charts/ChartOne";
+import ChartTwo from "@/components/Charts/ChartTwo";
+import ChartThree from "@/components/Charts/ChartThree";
 
-const BasicChartPage: React.FC = () => {
+const ChartPage: React.FC = () => {
   return (
-    <DefaultLayout>
-      <Chart />
-    </DefaultLayout>
+    <>
+      <Breadcrumb pageName="Revenue Analytics" />
+      <div className="grid grid-cols-12 gap-4 md:gap-6 2xl:gap-7.5">
+        <ChartOne />
+        <ChartTwo />
+        <ChartThree />
+      </div>
+    </>
   );
 };
 
-export default BasicChartPage;
+export default ChartPage;
+
