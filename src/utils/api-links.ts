@@ -1,7 +1,7 @@
 import { getProducts } from "@/API/productAPI";
 import { Category } from "@mui/icons-material";
 
-const authUrl = 'http://localhost:5078';
+const authUrl = 'http://localhost:5000';
 
 const apiLinks = {
   admin: {

@@ -1,341 +1,214 @@
-"use client";
+"use client"
 
-import React, { useEffect, useState, ChangeEvent, FormEvent } from "react";
+import React, { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from "yup";
+import { useAppDispatch, useAppSelector } from "@/hooks/hook";
+import { httpClient, clientLinks } from "@/utils";
+import { setProducts } from "@/slices/product/product";
+import { Button } from "@nextui-org/button";
+import { Input } from "@nextui-org/input";
+import { Textarea } from "@nextui-org/input";
+import { Select, SelectItem } from "@nextui-org/select";
+import { Card, CardBody, CardHeader, CardFooter } from "@nextui-org/card";
 import Image from "next/image";
-import defaultIMG from "@/assets/cog.png"; // Đảm bảo tệp này tồn tại
-import { useAppSelector } from "@/hooks/hook"; // Đảm bảo đường dẫn đúng
-import { apiLinks, clientLinks, httpClient } from "@/utils";
 
-// Định nghĩa giao diện cho sản phẩm
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  image: string;
-  categoryName: string;
-  // Thêm các thuộc tính khác nếu cần
-}
+const schema = yup.object().shape({
+  name: yup.string().required("Product name is required"),
+  description: yup.string().required("Description is required"),
+  price: yup.number().positive("Price must be positive").required("Price is required"),
+  stock: yup.number().integer("Stock must be an integer").min(0, "Stock cannot be negative").required("Stock is required"),
+  categoryId: yup.string().required("Category is required"),
+  image: yup.mixed()
+    .test("fileSize", "File size is too large", (value) => {
+      return !value || (value && value[0]?.size <= 5000000);
+    })
+    .test("fileType", "Unsupported file format", (value) => {
+      return !value || (value && ["image/jpeg", "image/png", "image/jpg"].includes(value[0]?.type));
+    }),
+});
 
-// Định nghĩa giao diện cho props của component
-interface DetailProductProps {
-  product: Product;
-  onClose: () => void;
-  onSave: () => void;
-}
+export default function EditProductForm({ product, onClose }) {
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector(state => state.category.categories);
+  const token = useAppSelector(state => state.auth.token.accessToken);
+  const [imagePreview, setImagePreview] = useState(product.image);
 
-const DetailProduct: React.FC<DetailProductProps> = ({ product, onClose, onSave }) => {
-  console.log("DetailProduct Component Mounted");
-  console.log("Received product prop:", product);
-
-  const categories = useAppSelector((state) => state.category.categories);
-  const token = useAppSelector(state => state.auth.token.accessToken)
-  console.log("Fetched categories from state:", categories);
-
-  // Định nghĩa trạng thái form
-  const [formData, setFormData] = useState({
-    id: product.id,
-    name: product.name,
-    description: product.description,
-    price: product.price,
-    stock: product.stock,
-    categoryName: product.categoryName,
-    image: null as File | null,
+  const { control, handleSubmit, formState: { errors }, setValue } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      categoryId: product.categoryId,
+    }
   });
 
-  // Trạng thái để hiển thị hình ảnh preview
-  const [imagePreview, setImagePreview] = useState<string>(
-    product.image ? product.image : defaultIMG.src
-  );
-
-  console.log("Initial imagePreview state:", imagePreview);
-
-  // Cập nhật formData khi product thay đổi
   useEffect(() => {
-    console.log("useEffect triggered: product changed");
-    setFormData({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      stock: product.stock,
-      categoryName: product.categoryName,
-      image: null,
-    });
-    setImagePreview(product.image ? product.image : defaultIMG.src);
-    console.log("Form data and imagePreview reset to:", {
-      ...formData,
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      stock: product.stock,
-      categoryName: product.categoryName,
-      image: null,
-    });
-  }, [product]);
+    setValue("name", product.name);
+    setValue("description", product.description);
+    setValue("price", product.price);
+    setValue("stock", product.stock);
+    setValue("categoryId", product.categoryId);
+  }, [product, setValue]);
 
-  // Hàm xử lý thay đổi các trường nhập liệu
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "price" || name === "stock" ? Number(value) : value,
-    }));
-    console.log(`Updated formData field ${name}:`, value);
-  };
-
-  // Hàm xử lý thay đổi hình ảnh
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        image: file,
-      }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          setImagePreview(reader.result);
-          console.log("Updated imagePreview state with new image:", reader.result);
+  const onSubmit = async (data) => {
+    const formData = new FormData();
+    Object.keys(data).forEach(key => {
+      if (key === 'image') {
+        if (data[key][0]) {
+          formData.append(key, data[key][0]);
         }
-      };
-      reader.onerror = () => {
-        console.error("FileReader encountered an error");
-      };
-      reader.readAsDataURL(file);
-      console.log("FileReader started reading the file");
-    } else {
-      // Nếu không chọn file, đặt lại hình ảnh về mặc định
-      setFormData((prev) => ({
-        ...prev,
-        image: null,
-      }));
-      setImagePreview(product.image ? product.image : defaultIMG.src);
-      console.log("No file selected. Reset imagePreview to:", product.image ? product.image : defaultIMG.src);
-    }
-  };
-
-  // Hàm xử lý submit form
-  const handleSubmitForm = async (e: FormEvent) => {
-    e.preventDefault();
-    console.log("Form submission started with data:", formData);
+      } else {
+        formData.append(key, data[key]);
+      }
+    });
 
     try {
-      const submitFormData = new FormData();
-      submitFormData.append("id", formData.id);
-      submitFormData.append("Name", formData.name);
-      submitFormData.append("Description", formData.description);
-      submitFormData.append("Price", formData.price.toString());
-      submitFormData.append("Stock", formData.stock.toString());
+      const response = await httpClient.put({
+        url: clientLinks.product.editProduct(product.id),
+        token,
+        data: formData,
+        contentType: "multipart/form-data",
+      });
 
-      // Tìm CategoryId dựa trên categoryName
-      const category = categories.find(cat => cat.name === formData.categoryName);
-      if (category) {
-        submitFormData.append("CategoryId", category.id);
-        console.log("Appended CategoryId:", category.id);
-      } else {
-        console.error("Category not found for categoryName:", formData.categoryName);
-        alert("Invalid category selected.");
-        return;
-      }
-
-      // Append image chỉ nếu có file mới được chọn
-      if (formData.image) {
-        submitFormData.append("Image", formData.image);
-        console.log("Appended Image file:", formData.image);
-      } else {
-        console.log("No new image to append");
-      }
-
-      console.log("FormData ready for submission");
-      try {
-        const response = await httpClient.put({
-          url: clientLinks.product.editProduct(formData.id),
-          data: submitFormData,
-          contentType: 'multipart/form-data',
-          token: token,
-        })
-
-        console.log("response: ", response)
-
-      } catch (error) {
-        console.error("editProduct error: ", error)
-      }
-
-      onSave();
-      onClose(); // Đóng modal sau khi lưu
-      console.log("onClose called to close the modal");
+      dispatch(setProducts(response.data.data));
+      onClose();
     } catch (error) {
       console.error("Failed to update product:", error);
-      alert("Failed to update product. Please try again.");
     }
   };
 
-  // Hàm xử lý Cancel: Reset form và đóng modal
-  const handleCancel = () => {
-    console.log("handleCancel triggered");
-    setFormData({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      stock: product.stock,
-      categoryName: product.categoryName,
-      image: null,
-    });
-    setImagePreview(product.image ? product.image : defaultIMG.src);
-    console.log("Form data and imagePreview reset to:", {
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      stock: product.stock,
-      categoryName: product.categoryName,
-      image: null,
-    });
-    onClose();
-    console.log("onClose called to close the modal on cancel");
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative flex w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
-        <form onSubmit={handleSubmitForm} className="w-full flex">
-          {/* Bên trái: Tải lên hình ảnh */}
-          <div className="w-1/3 pr-6 flex flex-col items-center">
-            <label className="text-gray-700 block text-lg font-bold mb-4">
-              Product Image
-            </label>
-            <div className="w-full flex flex-col items-center">
-              <Image
-                src={imagePreview}
-                alt="Product Image Preview"
-                className="mb-4 rounded"
-                width={250}
-                height={250}
-                onLoadingComplete={() => console.log("Image loaded successfully")}
-                onError={() => console.error("Failed to load image:", imagePreview)}
+    <Card>
+      <CardHeader>
+        <h4 className="text-2xl font-bold">Edit Product</h4>
+      </CardHeader>
+      <CardBody>
+        <div className="flex justify-center mb-4">
+          <Image
+            src={imagePreview}
+            alt="Product"
+            width={200}
+            height={200}
+            className="rounded-md"
+          />
+        </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                label="Product Name"
+                placeholder="Enter product name"
+                errorMessage={errors.name?.message}
               />
-              <input
+            )}
+          />
+
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <Textarea
+                {...field}
+                label="Description"
+                placeholder="Enter product description"
+                errorMessage={errors.description?.message}
+              />
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Controller
+              name="price"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type="number"
+                  label="Price"
+                  placeholder="Enter price"
+                  errorMessage={errors.price?.message}
+                />
+              )}
+            />
+
+            <Controller
+              name="stock"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type="number"
+                  label="Stock"
+                  placeholder="Enter stock"
+                  errorMessage={errors.stock?.message}
+                />
+              )}
+            />
+          </div>
+
+          <Controller
+            name="categoryId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                label="Category"
+                placeholder="Select a category"
+                errorMessage={errors.categoryId?.message}
+              >
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </Select>
+            )}
+          />
+
+          <Controller
+            name="image"
+            control={control}
+            render={({ field }) => (
+              <Input
                 type="file"
-                id="imageInput"
                 accept="image/*"
-                className="w-full cursor-pointer rounded-lg border border-gray-300 bg-transparent outline-none transition file:cursor-pointer file:border-0 file:bg-white file:px-5 file:py-3 file:text-gray-700"
-                onChange={handleImageChange}
+                label="Product Image"
+                placeholder="Upload product image"
+                errorMessage={errors.image?.message}
+                onChange={(e) => {
+                  field.onChange(e.target.files);
+                  handleImageChange(e);
+                }}
               />
-              {/* Không cần hiển thị lỗi cho hình ảnh */}
-            </div>
-          </div>
-
-          {/* Bên phải: Chi tiết sản phẩm */}
-          <div className="w-2/3 pl-6">
-            {/* Tên sản phẩm và Giá */}
-            <div className="flex justify-between mb-4">
-              <div className="w-3/5">
-                <label className="text-gray-700 block text-lg font-bold">
-                  Product Name
-                </label>
-                <input
-                  className="w-full rounded-lg border border-gray-300 bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary"
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="w-2/5 pl-2">
-                <label className="text-gray-700 block text-lg font-bold">
-                  Price
-                </label>
-                <input
-                  className="w-full rounded-lg border border-gray-300 bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary"
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                  min="0"
-                />
-              </div>
-            </div>
-
-            {/* Số lượng và Danh mục */}
-            <div className="flex justify-between mb-4">
-              <div className="w-1/2 px-2">
-                <label className="text-gray-700 block text-lg font-bold">
-                  Stock
-                </label>
-                <input
-                  className="w-full rounded-lg border border-gray-300 bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary"
-                  type="number"
-                  name="stock"
-                  value={formData.stock}
-                  onChange={handleChange}
-                  required
-                  min="0"
-                />
-              </div>
-
-              <div className="w-1/2 px-2">
-                <label className="text-gray-700 block text-lg font-bold">
-                  Category
-                </label>
-                <select
-                  className="w-full rounded-lg border border-gray-300 bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary"
-                  name="categoryName"
-                  value={formData.categoryName}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Mô tả */}
-            <div className="mb-4">
-              <label className="text-gray-700 block text-lg font-bold">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={4}
-                className="w-full rounded-lg border border-gray-300 bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary"
-                required
-              ></textarea>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="mt-6 flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="inline-flex items-center justify-center rounded-full bg-red px-8 py-4 text-center font-medium text-white hover:bg-opacity-90"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-center font-medium text-white hover:bg-opacity-90"
-              >
-                Save
-              </button>
-            </div>
-          </div>
+            )}
+          />
         </form>
-      </div>
-    </div>
+      </CardBody>
+      <CardFooter>
+        <div className="flex justify-end space-x-2">
+          <Button color="danger" variant="light" onPress={onClose}>Cancel</Button>
+          <Button color="primary" onPress={handleSubmit(onSubmit)}>Update Product</Button>
+        </div>
+      </CardFooter>
+    </Card>
   );
 }
 
-export default DetailProduct;
