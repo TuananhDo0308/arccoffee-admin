@@ -6,6 +6,7 @@ import { useAppSelector } from "@/hooks/hook";
 import { httpClient, clientLinks } from "@/utils";
 import { MoreVertical, Info } from 'lucide-react';
 import OrderDetailModal from "../ProcessingOrder/detailOrder";
+import ProductsSkeleton from "../skeleton";
 
 interface CompletedBill {
   id: string;
@@ -24,6 +25,7 @@ const CompletedOrderTable = () => {
   const [completedBills, setCompletedBills] = useState<CompletedBill[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<CompletedBill | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const token = useAppSelector(state => state.auth.token.accessToken);
 
   useEffect(() => {
@@ -43,6 +45,14 @@ const CompletedOrderTable = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleViewDetails = async (order: CompletedBill) => {
+    setIsLoadingProducts(true);
+    setSelectedOrder(order);
+    setTimeout(() => {
+      setIsLoadingProducts(false);
+    }, 1000);
   };
 
   const columns = [
@@ -75,7 +85,7 @@ const CompletedOrderTable = () => {
               </Button>
             </DropdownTrigger>
             <DropdownMenu aria-label="Order actions">
-              <DropdownItem onPress={() => setSelectedOrder(item)} startContent={<Info size={20} />}>
+              <DropdownItem onPress={() => handleViewDetails(item)} startContent={<Info size={20} />}>
                 View Details
               </DropdownItem>
             </DropdownMenu>
@@ -115,7 +125,9 @@ const CompletedOrderTable = () => {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onComplete={() => {}} // This is a no-op for completed orders
-        />
+        >
+          {isLoadingProducts ? <ProductsSkeleton /> : null}
+        </OrderDetailModal>
       )}
     </>
   );

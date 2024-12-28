@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext"; // Giả sử bạn đã có co
 import { httpClient, clientLinks } from "@/utils"; // Import API client
 import { setToken } from "@/slices/authSlice";
 import { useAppDispatch } from "@/hooks/hook";
-
+import logo from "@/assets/logo.png";
 const SignIn: React.FC = () => {
   // State variables để lưu trữ giá trị input
   const [username, setUsername] = useState('');
@@ -50,20 +50,8 @@ const SignIn: React.FC = () => {
           <div className="hidden w-full xl:block xl:w-1/2">
             <div className="px-26 py-17.5 text-center">
               <Link className="mb-5.5 inline-block" href="/">
-                <Image
-                  className="hidden dark:block"
-                  src={"/images/logo/logo.png"}
-                  alt="Logo"
-                  width={176}
-                  height={32}
-                />
-                <Image
-                  className="dark:hidden"
-                  src={"/images/logo/logo2.png"}
-                  alt="Logo"
-                  width={176}
-                  height={32}
-                />
+                <Image src={logo} alt="logo" width={100} height={100} />
+
               </Link>
               <p className="2xl:px-20">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit suspendisse.
@@ -74,7 +62,7 @@ const SignIn: React.FC = () => {
           <div className="w-full border-stroke dark:border-strokedark xl:w-1/2 xl:border-l-2">
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
               <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
-                Sign In to DoubleAdmin
+                Sign In to Arc
               </h2>
 
               {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}

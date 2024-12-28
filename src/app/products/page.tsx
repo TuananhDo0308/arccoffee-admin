@@ -44,9 +44,10 @@ export default function ProductPage() {
     }
   };
 
-  return (
+  return (      
+  <DefaultLayout>
+
     <NextUIProvider>
-      <DefaultLayout>
       <Breadcrumb pageName="Product" />
 
         <div className="space-y-6 w-full ">
@@ -69,8 +70,8 @@ export default function ProductPage() {
           {activeSection === "products" && <ProductSection />}
           {activeSection === "categories" && <CategorySection />}
         </div>
-      </DefaultLayout>
-    </NextUIProvider>
+    </NextUIProvider>      </DefaultLayout>
+
   );
 }
 

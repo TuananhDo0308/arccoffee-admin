@@ -48,7 +48,7 @@ interface AdminDataSubmit {
   districtId: string,
   street: string,
   roleId: string,
-  branchId: string
+  branchId: string | null,
 }
 
 interface District {
@@ -69,7 +69,7 @@ interface Region {
 }
 
 const Settings = () => {
-  const token = useAppSelector(state => state.auth.token.accessToken)
+  const token = useAppSelector(state => state?.auth?.token?.accessToken)
   const [formData, setFormData] = useState<AdminData>({
     id: "",
     name: "",
@@ -164,7 +164,7 @@ const Settings = () => {
       // Gọi API để lấy dữ liệu admin
       const response = await httpClient.put({
         url: clientLinks.admin.updateAdmin,
-        data: dataSubmit, // Truyền dữ liệu admin vào body
+        data: dataSubmit,
         token: token
       });
 
@@ -227,6 +227,9 @@ const Settings = () => {
       branchId: formData.branchId,
     };
 
+    if (submitData.branchId === "00000000-0000-0000-0000-000000000000" ){
+      submitData.branchId = null;
+    }
     updateAdminData(submitData);
     setIsEditable(false);
   };
@@ -278,7 +281,6 @@ const Settings = () => {
     <DefaultLayout>
       <div className="mx-auto max-w-270">
         <Breadcrumb pageName="Settings" />
-
             <div className="flex justify-between gap-4 flex-wrap">
               {/* Left container */}
               <div className="flex-1">
@@ -340,7 +342,7 @@ const Settings = () => {
                           id="emailAddress"
                           value={formData.email}
                           onChange={handleInputChange}
-                          disabled={!isEditable} // Disable input if not editable
+                          readOnly // Chỉ xem, không sửa
                         />
                       </div>
 
@@ -382,8 +384,6 @@ const Settings = () => {
                             name="roleId"
                             id="address"
                             value={formData.roleId}
-                            onChange={handleInputChange}
-                            // disabled={!isEditable} // Disable input if not editable
                             readOnly="true" // Chỉ xem, không sửa
                           />
                         </div>
@@ -437,7 +437,6 @@ const Settings = () => {
                           name="branch"
                           id="branch"
                           value={formData.branchName}
-                          onChange={handleInputChange}
                           readOnly
                         />
                       </div>

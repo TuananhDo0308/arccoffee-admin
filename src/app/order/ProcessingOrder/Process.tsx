@@ -6,6 +6,7 @@ import { useAppSelector } from "@/hooks/hook";
 import { httpClient, clientLinks } from "@/utils";
 import { MoreVertical, CheckCircle, Info } from 'lucide-react';
 import OrderDetailModal from "./detailOrder";
+import ProductsSkeleton from "../skeleton";
 
 interface PendingBill {
   id: string;
@@ -24,6 +25,7 @@ const ProcessingOrderTable = () => {
   const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<PendingBill | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const token = useAppSelector(state => state.auth.token.accessToken);
 
   useEffect(() => {
@@ -55,6 +57,15 @@ const ProcessingOrderTable = () => {
     } catch (error) {
       console.error("Error completing order:", error);
     }
+  };
+
+  const handleViewDetails = async (order: PendingBill) => {
+    setIsLoadingProducts(true);
+    setSelectedOrder(order);
+    // Simulate loading products (replace with actual API call if needed)
+    setTimeout(() => {
+      setIsLoadingProducts(false);
+    }, 1000);
   };
 
   const columns = [
@@ -90,7 +101,7 @@ const ProcessingOrderTable = () => {
               <DropdownItem onPress={() => handleCompleteOrder(item.id)} startContent={<CheckCircle size={20} />}>
                 Complete Order
               </DropdownItem>
-              <DropdownItem onPress={() => setSelectedOrder(item)} startContent={<Info size={20} />}>
+              <DropdownItem onPress={() => handleViewDetails(item)} startContent={<Info size={20} />}>
                 View Details
               </DropdownItem>
             </DropdownMenu>
@@ -130,7 +141,9 @@ const ProcessingOrderTable = () => {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onComplete={handleCompleteOrder}
-        />
+        >
+          {isLoadingProducts ? <ProductsSkeleton /> : null}
+        </OrderDetailModal>
       )}
     </>
   );

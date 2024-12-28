@@ -200,7 +200,7 @@ export default function ProductSection() {
                     </div>
                   </TableCell>
                   <TableCell>{product.categoryName}</TableCell>
-                  <TableCell>{product.price} đ</TableCell>
+                  <TableCell>{product.price.toLocaleString()} VND</TableCell>
                   <TableCell>{product.stock}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
