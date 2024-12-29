@@ -10,7 +10,7 @@ export const GET = async (request: NextRequest) => {
             token: token,
         })
 
-        const data = response.data;
+        const data = response.data.data;
         return NextResponse.json(data, {status: 200})
     } catch (error) {
         console.error('Error during authentication:', error);

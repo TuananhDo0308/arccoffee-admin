@@ -10,7 +10,7 @@ export const GET = async (request: NextRequest) => {
             token: token
         });
 
-        const data = response.data;
+        const data = response.data.data;
         // Return the access token to the client
         return NextResponse.json(data , { status: 200 });
 
