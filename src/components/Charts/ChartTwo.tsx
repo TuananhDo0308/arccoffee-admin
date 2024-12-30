@@ -128,11 +128,21 @@ const ChartTwo: React.FC = () => {
         title: {
           text: "Revenue (VND)",
         },
+        labels: {
+          formatter: function(val) {
+            return Math.round(val).toLocaleString('vi-VN') + ' VND';
+          }
+        }
       },
       {
         opposite: true,
         title: {
           text: "Number of Orders"
+        },
+        labels: {
+          formatter: function(val) {
+            return Math.round(val);
+          }
         }
       }
     ],

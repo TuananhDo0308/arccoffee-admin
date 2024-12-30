@@ -125,6 +125,9 @@ const ChartOne: React.FC = () => {
         labels: {
           style: {
             colors: '#008FFB',
+          },
+          formatter: function(val) {
+            return Math.round(val).toLocaleString('vi-VN') + ' VND';
           }
         },
         title: {
@@ -150,6 +153,9 @@ const ChartOne: React.FC = () => {
         labels: {
           style: {
             colors: '#00E396',
+          },
+          formatter: function(val) {
+            return Math.round(val);
           }
         },
         title: {
