@@ -2,43 +2,53 @@
 
 ## Description
 
-This is the admin dashboard for the Bottled Water Vending eCommerce platform. Built with **Next.js**, it provides administrators with tools to manage the website effectively. Features include product management, order tracking, user account management, and detailed analytics.
+This is the admin dashboard for the Bottled Water Vending eCommerce platform. Built with **Next.js**, it provides administrators with tools to efficiently manage the website. Features include product management, order management, and revenue analytics.
 
-### Features
+---
+## Related Repositories
 
-- **Product Management:** Add, edit, delete, and organize product listings.
-- **Order Tracking:** View and manage customer orders in real time.
-- **User Management:** Manage user accounts, roles, and permissions.
-- **Analytics Dashboard:** View sales data, user activity, and order trends.
-- **Responsive Design:** Optimized for desktop, tablet, and mobile devices.
+This project is part of a larger ecosystem. Here are the related repositories:
+
+- **Frontend (User Website):** [eCommerce Website - User Interface](https://github.com/TuananhDo0308/arccoffee.git)
+- **Admin Dashboard:** [Admin Dashboard](https://github.com/TuananhDo0308/arccoffee-admin.git)
+- **Backend (API Server):** [API Server](https://github.com/tquocan04/Online_Shopping.git)
+
+---
+## Preview
+
+### 1. Sign in  
+![Sign in](./public/images/signin.png)
+
+### 2. Product Management
+![Product Management](./public/images/product.png)
+
+### 3. Order Management
+![Order Management](./public/images/order.png)
+
+### 4. Revenue Analytics
+![Revenue Analytics](./public/images/statistic.png)
 
 ---
 
-## Preview
+### Features
 
-### 1. Dashboard Overview
-![Dashboard Overview](./public/images/dashboard-overview.jpg)
-
-### 2. Product Management
-![Product Management](./public/images/product-management.jpg)
-
-### 3. Order Tracking
-![Order Tracking](./public/images/order-tracking.jpg)
-
-### 4. Analytics
-![Analytics Page](./public/images/analytics.jpg)
+- **Product Management:** Add, edit, and delete products.
+- **Order Management:** View and update customer orders.
+- **Revenue Analytics:** Monitor sales performance and revenue trends.
+- **Responsive Design:** Optimized for desktop, tablet, and mobile devices.
 
 ---
 
 ## Table of Contents
 
-1. [Getting Started](#getting-started)
-2. [Prerequisites](#prerequisites)
-3. [Installation](#installation)
-4. [Run the Project](#run-the-project)
-5. [Usage](#usage)
-6. [Tech Stack](#tech-stack)
-7. [License](#license)
+- [Getting Started](#getting-started)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Run the Project](#run-the-project)
+- [Usage](#usage)
+- [Tech Stack](#tech-stack)
+- [License](#license)
 
 ---
 
@@ -62,8 +72,8 @@ Ensure you have the following installed on your system:
 1. Clone the repository to your local machine:
 
    ```bash
-   git clone <repository_url>
-   cd <project_directory>
+   git clone https://github.com/TuananhDo0308/arccoffee-admin.git
+   cd arccoffee-admin
    ```
 
 2. Install the dependencies:
@@ -73,6 +83,24 @@ Ensure you have the following installed on your system:
    # or
    yarn install
    ```
+
+---
+
+## Configuration
+
+1. API Endpoints:
+
+   Ensure that all API endpoints are correctly defined in `src/utils/api-links.ts`. For example:
+
+   ```typescript
+   const authUrl = <your backend api url>;
+   ```
+   Ensure that all API endpoints are correctly defined in `src/utils/client-api.ts`. For example:
+
+   ```typescript
+   const clientUrl = <your frontend url>;
+   ```
+
 
 ---
 
@@ -111,11 +139,10 @@ Ensure you have the following installed on your system:
 
 Once the admin dashboard is running, administrators can:
 
-- Add, edit, or remove product listings.
-- Track and manage customer orders.
-- View and analyze sales and user data.
-- Manage user accounts and permissions.
-- Access tools to streamline eCommerce operations.
+- **Manage Products:** Add, edit, or remove product listings.
+- **Track Orders:** View order details and update order statuses.
+- **Analyze Revenue:** Access revenue and sales statistics.
+
 
 ---
 
@@ -124,13 +151,12 @@ Once the admin dashboard is running, administrators can:
 The admin dashboard uses the following technologies:
 
 - **Next.js:** React framework for building performant web applications.
-- **NextAuth.js:** Authentication and session management.
 - **Redux Toolkit:** State management for predictable application state.
-- **Framer Motion:** Animation library for smooth transitions and effects.
 - **Tailwind CSS:** Utility-first CSS framework for responsive design.
 - **Axios:** For making HTTP requests.
 
 ---
+
 
 ## License
 
@@ -138,4 +164,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-This admin dashboard for bottled water vending is designed to streamline management and provide a seamless experience for administrators. 🚀
+This admin dashboard for bottled water vending is a perfect solution for managing products, orders, and revenue analytics efficiently. 🚀
