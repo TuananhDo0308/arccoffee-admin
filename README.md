@@ -11,7 +11,7 @@ This project is part of a larger ecosystem. Here are the related repositories:
 
 - **Frontend (User Website):** [eCommerce Website - User Interface](https://github.com/TuananhDo0308/arccoffee.git)
 - **Admin Dashboard:** [Admin Dashboard](https://github.com/TuananhDo0308/arccoffee-admin.git)
-- **Backend (API Server):** [API Server](https://github.com/tquocan04/Online_Shopping.git)
+- **Backend (API Server):** [API Server](https://github.com/tquocan04/Distribute_Online_Shopping.git)
 
 ---
 ## Preview
