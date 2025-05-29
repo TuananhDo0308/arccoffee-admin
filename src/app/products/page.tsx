@@ -27,7 +27,7 @@ export default function ProductPage() {
       const response = await httpClient.get({
         url: clientLinks.product.getProductAll,
       });
-      dispatch(setProducts(response.data.data));
+      dispatch(setProducts(response.data.data.data));
     } catch (err) {
       console.error('Error fetching products:', err);
     }
@@ -38,7 +38,7 @@ export default function ProductPage() {
       const response = await httpClient.get({
         url: clientLinks.category.getCategory,
       });
-      dispatch(setCategories(response.data.data));
+      dispatch(setCategories(response.data.data.data));
     } catch (err) {
       console.error('Error fetching categories:', err);
     }

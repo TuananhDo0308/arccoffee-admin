@@ -8,7 +8,7 @@ import SidebarItem from "@/components/Sidebar/SidebarItem";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import logo from "@/assets/logo.png";
-import { useAppDispatch } from "@/hooks/hook";
+import { useAppDispatch, useAppSelector } from "@/hooks/hook";
 import { removeToken } from "@/slices/authSlice";
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -23,6 +23,11 @@ const menuGroups = [
       { icon: "product", label: "Product", route: "/products" },
       { icon: "orders", label: "Orders", route: "/order" },
       { icon: "settings", label: "Settings", route: "/settings" },
+      { icon: "vouchers", label: "Vouchers", route: "/voucher" },
+      { icon: "branch", label: "Branch", route: "/branch" },
+      { icon: "employee", label: "Employee", route: "/employee" },
+
+
     ],
   },
 ];
@@ -35,6 +40,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     setActiveItem(pathname);
   }, [pathname]);
 
+  const role = useAppSelector((state) => state.auth.role);
+  console.log("Role in SidebarItem:", role);
   return (
     <motion.aside
       initial={{ width: sidebarOpen ? "200px" : "64px" }}
@@ -70,6 +77,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             )}
             <ul className="space-y-2">
               {group.menuItems.map((menuItem, menuIndex) => (
+                
                 <SidebarItem
                   key={menuIndex}
                   item={menuItem}

@@ -44,24 +44,21 @@ export default function ProductSection() {
         const response = await httpClient.get({ 
           url: clientLinks.product.getProductAvailable,
         });
-        data = response.data;
+        data = response.data.data.data;
       } else if (selectedStatus === "hidden") {
         const response = await httpClient.get({ 
           url: clientLinks.product.getProductHidden,
           token: token,
         });
-        data = response.data;
+        data = response.data.data.data;
       } else {
         const response = await httpClient.get({ 
           url: clientLinks.product.getProductAll,
         });
-        data = response.data;
+        data = response.data.data.data;
       }
       
-      if (data.length === 0) {
-        setErrorMessage(data.message || `No ${selectedStatus === "all" ? "" : selectedStatus} products found.`);
-      }
-      dispatch(setProducts(data.data));
+      dispatch(setProducts(data));
     } catch (err) {
       console.error('Error fetching products:', err);
       setErrorMessage("No products.");

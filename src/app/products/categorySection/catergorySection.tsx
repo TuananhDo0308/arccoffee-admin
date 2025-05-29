@@ -37,12 +37,12 @@ export default function CategorySection() {
       const response = await httpClient.get({ 
         url: clientLinks.category.getCategory,
       });
-      const data = response.data;
-      
+      const data = response.data.data.data;
+      console.log('Fetched categories:', data);
       if (data.length === 0) {
         setErrorMessage("No categories found.");
       }
-      dispatch(setCategories(data.data));
+      dispatch(setCategories(data));
     } catch (err) {
       console.error('Error fetching categories:', err);
       setErrorMessage("Error fetching categories.");

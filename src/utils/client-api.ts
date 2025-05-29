@@ -1,5 +1,5 @@
 
-const clientUrl = 'http://localhost:3001';
+const clientUrl = 'http://localhost:3000';
 
 const clientLinks = {
   admin: {
@@ -27,7 +27,8 @@ const clientLinks = {
     updateProductStatus: (id: string) => `${clientUrl}/api/products/updateProductStatus/${id}`,
     editProduct: (id: string) => `${clientUrl}/api/products/editProduct/${id}`,
     deleteProduct: (id: string) => `${clientUrl}/api/products/deleteProduct/${id}`,
-  }
+  },
+
 };
 
 export default clientLinks;

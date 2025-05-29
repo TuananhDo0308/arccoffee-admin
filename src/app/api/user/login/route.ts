@@ -16,7 +16,7 @@ export const POST = async (request: NextRequest) => {
     });
 
     // Extract the access token from the external service's response
-    const accessToken = response.data.accessToken;
+    const accessToken = response.data;
 
     // Return the access token to the client
     return NextResponse.json({ accessToken }, { status: 200 });

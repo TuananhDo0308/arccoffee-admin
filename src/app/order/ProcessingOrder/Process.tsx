@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Skeleton } from "@nextui-org/react";
 import { useAppSelector } from "@/hooks/hook";
-import { httpClient, clientLinks } from "@/utils";
+import { httpClient, clientLinks, apiLinks } from "@/utils";
 import { MoreVertical, CheckCircle, Info } from 'lucide-react';
 import OrderDetailModal from "./detailOrder";
 import ProductsSkeleton from "../skeleton";
@@ -36,10 +36,10 @@ const ProcessingOrderTable = () => {
     setIsLoading(true);
     try {
       const response = await httpClient.get({
-        url: clientLinks.bill.getPendingBills,
+        url: apiLinks.bill.getPendingBills,
         token: token,
       });
-      setPendingBills(response.data);
+      setPendingBills(response.data.data);
     } catch (error) {
       console.error("Error fetching pending bills:", error);
     } finally {
@@ -49,8 +49,8 @@ const ProcessingOrderTable = () => {
 
   const handleCompleteOrder = async (orderId: string) => {
     try {
-      await httpClient.patch({
-        url: clientLinks.bill.updateStatusBills(orderId),
+      await httpClient.put({
+        url: apiLinks.bill.updateStatusBills(orderId),
         token: token,
       });
       fetchPendingBills();

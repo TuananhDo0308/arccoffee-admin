@@ -6,12 +6,12 @@ import { Input } from "@nextui-org/input";
 import { httpClient, clientLinks } from "@/utils";
 import { useAppSelector } from "@/hooks/hook";
 
-export default function AddCategoryForm({ onClose, onSuccess }) {
+export default function AddCategoryForm({ onClose, onSuccess }:any) {
   const [categoryName, setCategoryName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const token = useAppSelector((state) => state.auth.token.accessToken);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:any) => {
     e.preventDefault();
     setIsLoading(true);
     try {

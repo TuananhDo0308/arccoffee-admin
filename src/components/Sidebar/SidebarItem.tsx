@@ -1,7 +1,8 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { BarChart2, Package, ShoppingCart, Boxes, FileInput, Settings } from 'lucide-react';
+import { BarChart2, Package, ShoppingCart, Boxes, FileInput, Settings, Gift, User, Map } from 'lucide-react';
+import { useAppSelector } from "@/hooks/hook";
 
 interface SidebarItemProps {
   item: {
@@ -20,6 +21,9 @@ const iconComponents = {
   stock: Boxes,
   import: FileInput,
   settings: Settings,
+  vouchers: Gift,
+  employee: User,
+  branch: Map,
 };
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -27,6 +31,21 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   isActive,
   sidebarOpen,
 }) => {
+  // Retrieve user role from Redux store
+  const userRole = useAppSelector((state) => state.auth?.role); // Adjust the path based on your Redux state structure
+
+  // Define items to hide for Staff role
+  const restrictedItems = ["Employee", "Branch"]; // Adjust these labels based on your item.label values
+  const restrictedItemsAdmin = ["Settings"]; // Adjust these labels based on your item.label values
+
+  // If user is Staff and the current item is restricted, don't render it
+  if (userRole === "Staff" && restrictedItems.includes(item.label)) {
+    return null;
+  }
+  if (userRole === "Admin" && restrictedItemsAdmin.includes(item.label)) {
+    return null;
+  }
+
   const IconComponent = iconComponents[item.icon as keyof typeof iconComponents];
 
   return (
@@ -56,4 +75,3 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 };
 
 export default SidebarItem;
-

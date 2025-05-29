@@ -29,10 +29,10 @@ const SignIn: React.FC = () => {
         url: clientLinks.admin.signin, // Dùng clientLinks để lấy URL đăng nhập
         data: credentials, // Truyền thông tin đăng nhập
       });
-
+      console.log("Response from sign in:", response.data);
       // Kiểm tra kết quả và xử lý đăng nhập thành công
       if (response.data.accessToken) {
-        dispatch(setToken(response.data));  // Giả sử API trả về token trong response.data
+        dispatch(setToken(response.data.accessToken));  // Giả sử API trả về token trong response.data
         console.log("Admin signed in:", response.data);
       } else {
         setErrorMessage("Đăng nhập không thành công");
