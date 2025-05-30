@@ -26,7 +26,7 @@ export const PATCH = async (req: NextRequest, { params }: { params: { id: string
         const body = await req.json();
 
         // Gọi API PUT
-        const response = await httpClient.patch({
+        const response = await httpClient.put({
             url: `${apiLinks.category.editCategory}/${id}`, // Đường dẫn động
             data: body, // Truyền trực tiếp FormData
             token: token, // Token xác thực

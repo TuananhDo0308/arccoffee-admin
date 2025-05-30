@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
-import { httpClient, clientLinks } from "@/utils";
+import { httpClient, clientLinks, apiLinks } from "@/utils";
 import { useAppSelector } from "@/hooks/hook";
 
 export default function EditCategoryForm({ category, onClose, onSuccess }) {
@@ -15,8 +15,8 @@ export default function EditCategoryForm({ category, onClose, onSuccess }) {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await httpClient.patch({
-        url: clientLinks.category.editCategory(category.id),
+      await httpClient.put({
+        url:` ${apiLinks.category.editCategory}/${category.id}`,
         data: { name: categoryName },
         token: token,
       });

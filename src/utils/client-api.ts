@@ -1,5 +1,5 @@
 
-const clientUrl = 'http://localhost:3000';
+const clientUrl = 'http://localhost:3001';
 
 const clientLinks = {
   admin: {
